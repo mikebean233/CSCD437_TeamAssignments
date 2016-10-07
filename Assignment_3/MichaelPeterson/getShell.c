@@ -1,8 +1,9 @@
-#include<unistd.h>
-//#include<conio.h>
+#include <stdio.h>
 
-void main(){
+void main() {
+   char *name[2];
 
-  char* args[] = {"C:\\Windows\\System32\\cmd.exe",  NULL};
-  execv("C:\Windows\\System32\\cmd.exe", args);
+   name[0] = "/bin/sh";
+   name[1] = NULL;
+   execve(name[0], name, NULL);
 }

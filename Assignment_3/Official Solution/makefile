@@ -1,4 +1,4 @@
-gcc: StackOverrun.c
+gnu: StackOverrun.c
 	gcc -m32 StackOverrun.c -o StackOverrun_GNU -zexecstack -fno-stack-protector -g
 	echo "0" | sudo dd of=/proc/sys/kernel/randomize_va_space
 
@@ -10,4 +10,4 @@ microsoft: StackOverrun.c
 	cl StackOverrun.c /FeStackOverrun_Microsoft.exe
 
 asm: StackOverrun.c
-	gcc -S -g StackOverrun.c -o StackOverrun.s -fno-stack-protector
+	gcc -S -m32 StackOverrun.c -o StackOverrun_GNU -zexecstack -fno-stack-protector -g
