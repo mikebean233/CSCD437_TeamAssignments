@@ -1,5 +1,6 @@
 gcc: StackOverrun.c
-	gcc StackOverrun.c -o StackOverrun -fno-stack-protector
+	gcc -m32 StackOverrun.c -o StackOverrun_GNU -execstack -fno-stack-protector
+	echo "0" | sudo dd of=/proc/sys/kernel/randomize_va_space
 
 borland: StackOverrun.c
 	bcc32  StackOverrun.c
