@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
+#include <errno.h>
+#include <memory.h>
+#include <limits.h>
 
 #define IN_BUFF_LENGTH 50
 #define NUMBER_BUFF_LENGTH 12
@@ -25,13 +28,21 @@ void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, re
 
 int readInput(char *inputBuffer, int bufferLength);
 
-int main() {
+long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]);
+
+int main(int argc, char** argv) {
 	// First things first, make sure this isn't being ran as root
 	if(!getuid()){
 		fprintf(stderr, "\nThis program must not be run as the root user!\n");
 		exit(1);
 	}
 
+	printf("\n------------- %s-------------------\n", argv[1]);
+
+#if __GNUC__ < 4
+	fprintf(stderr, "\nThis is only designed to be compiled using GCC 4.0 or newer\n");
+	exit(1);
+#endif
 #ifdef _WIN32
 	fprintf(stderr, "\nThis program is not designed to run in windows\n");
 	exit(1);
@@ -67,7 +78,7 @@ int main() {
 	 */
 	regexVerifier nameVerifiers[] = {{nameRegex, 1, "You must enter only letters"}, emptyVerifier};
 	getValidatedString("Enter your first name: ", firstName, IN_BUFF_LENGTH, nameVerifiers);
-	getValidatedString("Enter your last name: " , lastName, IN_BUFF_LENGTH, nameVerifiers);
+	getValidatedString("Enter your last name: " , lastName,  IN_BUFF_LENGTH, nameVerifiers);
 
 #ifdef TEST
 	runRegexTestCases(nameRegex, nameTestCases);
@@ -77,20 +88,24 @@ int main() {
 	 * 2) get 2 32 bit ints from user
 	 */
 	regexVerifier numberVerifiers[] = {{numberRegex, 1, "you must only enter digits which may be preceded with an \"+\" or \"-\""}, emptyVerifier};
-	getValidatedString("Enter a 32 bit integer: "     , intA, NUMBER_BUFF_LENGTH, numberVerifiers);
-	getValidatedString("Enter another 32 bit integer:", intB, NUMBER_BUFF_LENGTH, numberVerifiers);
+	//getValidatedString("Enter a 32 bit integer: "     , intA, NUMBER_BUFF_LENGTH, numberVerifiers);
+	//getValidatedString("Enter another 32 bit integer:", intB, NUMBER_BUFF_LENGTH, numberVerifiers);
+	long long integerA = getVerifiedInteger("Enter the first 32 bit integer: " ,intA, NUMBER_BUFF_LENGTH, numberVerifiers);
+	long long integerB = getVerifiedInteger("Enter the second 32 bit integer: ",intB, NUMBER_BUFF_LENGTH, numberVerifiers);
+
+	long long result = integerA * integerB;
 
 #ifdef TEST
 	runRegexTestCases(numberRegex, numberTestCases);
 #endif
 
 	/**
-	 * 3) get input/output filename form user
+	 * 3) get input/output filename from user
 	 */
 	regexVerifier filenameVerifiers[] = {
 			{filenameRegex_HasAcceptedExtension, 1, "only files with the extensions .txt and .text are allowed"},
-			{filenameRegex_HasRelativePath, 0, "you are not allowed to use relative paths"},
-			{filenameRegex_InCurrentDir, 1, "you may only specify files in the current directory"},
+			{filenameRegex_HasRelativePath,      0, "you are not allowed to use relative paths"},
+			{filenameRegex_InCurrentDir,         1, "you may only specify files in the current directory"},
 			emptyVerifier
 	};
 	getValidatedString("Enter an input filename from the current Directory: " , inFilename , IN_BUFF_LENGTH, filenameVerifiers);
@@ -138,7 +153,7 @@ int isRegexMatch(char *regex, char *input) {
 	char errorMessage[100];
 
 	regex_t regext;
-	int reti = regcomp(&regext, regex, REG_EXTENDED);
+	int reti = regcomp(&regext, regex, REG_EXTENDED | REG_ENHANCED);
 	if (reti) {
 		regerror(reti, &regext, errorMessage, sizeof(errorMessage));
 		fprintf(stderr, "%s\n", errorMessage);
@@ -181,7 +196,7 @@ void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, re
 				if (thisVerifier.shouldMatch != isRegexMatch(thisVerifier.regex, inputBuffer)) {
 					failCount++;
 					isValid = 0;
-					printf("- %s\n", thisVerifier.failDescription);
+					printf("\n- %s\n", thisVerifier.failDescription);
 				}
 			}
 			if (failCount == 0)
@@ -195,13 +210,40 @@ int readInput(char *inputBuffer, int bufferLength) {
 	int exceededBuffer = 0;
 	int copyCount = 0;
 	while ((thisChar = getchar()) != '\n') {
-		if (copyCount < bufferLength - 1) {
-			inputBuffer[copyCount] = thisChar;
-			copyCount++;
-		} else
+		if (copyCount < bufferLength - 1)
+			inputBuffer[copyCount++] = thisChar;
+		else
 			exceededBuffer = 1;
 	}
 	inputBuffer[copyCount] = '\0';
 	return (exceededBuffer) ? READ_EXCEEDED_BUFFER : (copyCount == 0) ? READ_ZERO_BYTES : READ_WITHIN_BUFFER;
 }
+
+long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]){
+	int isValid = 0;
+	long long returnValue = 0;
+	int problemCount = 0;
+	while(!isValid){
+		getValidatedString(prompt, inputBuffer, inputBufferSize, verifiers);
+		errno = 0;
+		returnValue = strtoll(inputBuffer, NULL, 10);
+		isValid = 1;
+		if(returnValue > INT_MAX){
+			printf("\n- The provided value exceeds the maximum value for a 32 bit signed integer");
+			isValid = 0;
+		}
+
+		if(returnValue < INT_MIN){
+			printf("\n- The provided value is less then the minimum value for a 32 but signed integer");
+			isValid = 0;
+		}
+
+		if(errno){ // This should never happen...
+			printf("%s\n", strerror(errno));
+			isValid = 0;
+		}
+	}
+ return returnValue;
+}
+
 
