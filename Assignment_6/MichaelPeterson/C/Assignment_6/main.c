@@ -2,6 +2,7 @@
 #include <regex.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <unistd.h>
 
 #define IN_BUFF_LENGTH 50
 #define NUMBER_BUFF_LENGTH 12
@@ -25,6 +26,21 @@ void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, re
 int readInput(char *inputBuffer, int bufferLength);
 
 int main() {
+	// First things first, make sure this isn't being ran as root
+	if(!getuid()){
+		fprintf(stderr, "\nThis program must not be run as the root user!\n");
+		exit(1);
+	}
+
+#ifdef _WIN32
+	fprintf(stderr, "\nThis program is not designed to run in windows\n");
+	exit(1);
+#endif
+#ifdef _WIN64
+	fprintf(stderr, "\nThis program is not designed to run in windows\n");
+	exit(1);
+#endif
+
 	// input buffers
 	char firstName[IN_BUFF_LENGTH], lastName[IN_BUFF_LENGTH];
 	char inFilename[IN_BUFF_LENGTH], outFilename[IN_BUFF_LENGTH];
@@ -44,7 +60,6 @@ int main() {
 	char * filenameTestCases[] = {"", "\0", "\n", "", "file.dog", "file.Txt", "file.txt", "./file/../.txt", "/file.txt", "./file.txt", "../file.txt", "/../file.txt", "./ /", 0};
 #endif
 
-
 	regexVerifier emptyVerifier = {NULL, 0, NULL};
 
 	/**
@@ -61,7 +76,7 @@ int main() {
 	/**
 	 * 2) get 2 32 bit ints from user
 	 */
-	regexVerifier numberVerifiers[] = {{numberRegex, 1, "you must only enter digits that may start with a \"+\" or \"-\""}, emptyVerifier};
+	regexVerifier numberVerifiers[] = {{numberRegex, 1, "you must only enter digits which may be preceded with an \"+\" or \"-\""}, emptyVerifier};
 	getValidatedString("Enter a 32 bit integer: "     , intA, NUMBER_BUFF_LENGTH, numberVerifiers);
 	getValidatedString("Enter another 32 bit integer:", intB, NUMBER_BUFF_LENGTH, numberVerifiers);
 
@@ -166,7 +181,7 @@ void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, re
 				if (thisVerifier.shouldMatch != isRegexMatch(thisVerifier.regex, inputBuffer)) {
 					failCount++;
 					isValid = 0;
-					printf("%s\n", thisVerifier.failDescription);
+					printf("- %s\n", thisVerifier.failDescription);
 				}
 			}
 			if (failCount == 0)
