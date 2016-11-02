@@ -287,10 +287,10 @@ FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVe
 					printf("\n- You must specify a file that you have read privileges to\n");
 					isValid = 0;
 				}
-			}
-			if(isValid){
+
 				errno = 0;
-				if(!(validFile = fopen(inputBuffer, "r"))){
+				// Try opening the file, complain of something goes wrong
+				if(isValid && !(validFile = fopen(inputBuffer, "r"))){
 					printf("\n- %s\n", strerror(errno));
 					isValid = 0;
 				}
