@@ -43,11 +43,11 @@ int main() {
 	exit(1);
 #endif
 #ifdef _WIN32
-	fprintf(stderr, "\nThis program is not designed to run in windows\n");
+	fprintf(stderr, "\nThis program is only designed to run in Linux\n");
 	exit(1);
 #endif
 #ifdef _WIN64
-	fprintf(stderr, "\nThis program is not designed to run in windows\n");
+	fprintf(stderr, "\nThis program is only designed to run in Linux\n");
 	exit(1);
 #endif
 
@@ -68,6 +68,13 @@ int main() {
 	char * nameTestCases[]     = {"", "\0", "\n", "", "Jhon", " Jhon", "1ll124lk1 1 4l ", "bob", "a", "13", "bob ", 0};
 	char * numberTestCases[]   = {"", "\0", "\n", "0", " 0", "0 ", " 0 ", "-0", "+0", "123", "-123", "+123", "- 123", "123-", "+0123546789", "+01235467891", " ", "apple", 0};
 	char * filenameTestCases[] = {"", "\0", "\n", "", "file.dog", "file.Txt", "file.txt", "./file/../.txt", "/file.txt", "./file.txt", "../file.txt", "/../file.txt", "./ /", 0};
+
+
+	runRegexTestCases(nameRegex, nameTestCases);
+	runRegexTestCases(numberRegex, numberTestCases);
+	runRegexTestCases(filenameRegex_InCurrentDir,         filenameTestCases);
+	runRegexTestCases(filenameRegex_HasAcceptedExtension, filenameTestCases);
+	runRegexTestCases(filenameRegex_HasRelativePath,      filenameTestCases);
 #endif
 
 	regexVerifier emptyVerifier = {NULL, 0, NULL};
@@ -79,9 +86,6 @@ int main() {
 	getValidatedString("Enter your first name: ", firstName, IN_BUFF_LENGTH, nameVerifiers);
 	getValidatedString("Enter your last name: " , lastName,  IN_BUFF_LENGTH, nameVerifiers);
 
-#ifdef TEST
-	runRegexTestCases(nameRegex, nameTestCases);
-#endif
 
 	/**
 	 * 2) get 2 32 bit ints from user
@@ -91,10 +95,6 @@ int main() {
 	long long integerB = getVerifiedInteger("Enter the second 32 bit integer: ",intB, NUMBER_BUFF_LENGTH, numberVerifiers);
 	long long addResult  = integerA + integerB;
 	long long multResult = integerA * integerB;
-
-#ifdef TEST
-	runRegexTestCases(numberRegex, numberTestCases);
-#endif
 
 	/**
 	 * 3) get input/output filename from user
@@ -109,12 +109,6 @@ int main() {
 	FILE* outputFile = getValidFile("Enter an output file path from the current directory", outFilename, IN_BUFF_LENGTH, filenameVerifiers, OUTPUT_FILE);
 	writeOutputFile(firstName, lastName, addResult, multResult, inputFile, outputFile);
 
-
-#ifdef TEST
-	runRegexTestCases(filenameRegex_InCurrentDir,         filenameTestCases);
-	runRegexTestCases(filenameRegex_HasAcceptedExtension, filenameTestCases);
-	runRegexTestCases(filenameRegex_HasRelativePath,      filenameTestCases);
-#endif
 
 	/**
 	 * 4) get password from user
