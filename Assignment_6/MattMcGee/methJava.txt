@@ -1,0 +1,32 @@
+Java implementations:
+
+OS:
+I can't find any vulnerabilities in Java due to using compilers other than javac.
+
+Determining OS:
+
+System.getProperty("os.name")
+
+ or:
+ 
+class ShowProperties {
+    public static void main(String[] args) {
+        System.getProperties().list(System.out);
+    }
+}
+
+
+
+
+1. User's first and last name
+JAVA:
+boolean canRead(filename) // True if application can write to file
+ boolean canWrite(filename) // True if application can write to file
+ public boolean exists() // Tests whether the file or directory denoted by this abstract pathname exists.
+
+ Limiting access to current working directory. Not sure how these work. Seems like there should be a simple way to limit user access to CWD.
+
+	import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+
