@@ -289,7 +289,11 @@ FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVe
 				}
 			}
 			if(isValid){
-				validFile = fopen(inputBuffer, "r");
+				errno = 0;
+				if(!(validFile = fopen(inputBuffer, "r"))){
+					printf("\n- %s\n", strerror(errno));
+					isValid = 0;
+				}
 			}
 		}
 		else if(fileType == OUTPUT_FILE){
