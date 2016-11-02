@@ -29,8 +29,9 @@ void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, re
 int readInput(char *inputBuffer, int bufferLength);
 long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]);
 FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[], int fileType);
+void writeOutputFile(char* firstName, char* lastName, long long addResult, long long multResult, FILE* inputFile, FILE* outputFile);
 
-int main(int argc, char** argv) {
+int main() {
 	// First things first, make sure this isn't being ran as root
 	if(!getuid()){
 		fprintf(stderr, "\nThis program must not be run as the root user!\n");
@@ -86,8 +87,6 @@ int main(int argc, char** argv) {
 	 * 2) get 2 32 bit ints from user
 	 */
 	regexVerifier numberVerifiers[] = {{numberRegex, 1, "you must only enter digits which may be preceded with an \"+\" or \"-\""}, emptyVerifier};
-	//getValidatedString("Enter a 32 bit integer: "     , intA, NUMBER_BUFF_LENGTH, numberVerifiers);
-	//getValidatedString("Enter another 32 bit integer:", intB, NUMBER_BUFF_LENGTH, numberVerifiers);
 	long long integerA = getVerifiedInteger("Enter the first 32 bit integer: " ,intA, NUMBER_BUFF_LENGTH, numberVerifiers);
 	long long integerB = getVerifiedInteger("Enter the second 32 bit integer: ",intB, NUMBER_BUFF_LENGTH, numberVerifiers);
 	long long addResult  = integerA + integerB;
@@ -106,10 +105,9 @@ int main(int argc, char** argv) {
 			{filenameRegex_InCurrentDir,         1, "you may only specify files in the current directory"},
 			emptyVerifier
 	};
-	//getValidatedString("Enter an input filename from the current Directory: " , inFilename , IN_BUFF_LENGTH, filenameVerifiers);
-	//getValidatedString("Enter an output filename from the current Directory: ", outFilename, IN_BUFF_LENGTH, filenameVerifiers);
 	FILE* inputFile  = getValidFile("Enter an input file path from the current directory" , inFilename , IN_BUFF_LENGTH, filenameVerifiers, INPUT_FILE);
 	FILE* outputFile = getValidFile("Enter an output file path from the current directory", outFilename, IN_BUFF_LENGTH, filenameVerifiers, OUTPUT_FILE);
+	writeOutputFile(firstName, lastName, addResult, multResult, inputFile, outputFile);
 
 
 #ifdef TEST
@@ -127,7 +125,16 @@ int main(int argc, char** argv) {
 	fclose(inputFile);
 	fclose(outputFile);
 	return 0;
-}
+}// End Main
+
+
+/**************************************************************
+*                                                            *
+*                      HELPER FUNCTIONS                      *
+*                                                            *
+*      |        |        |        |        |        |        *
+*      v        v        v        v        v        v        *
+**************************************************************/
 
 
 int runRegexTestCases(char *regex, char *testCases[]) {
@@ -222,7 +229,6 @@ int readInput(char *inputBuffer, int bufferLength) {
 long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]){
 	int isValid = 0;
 	long long returnValue = 0;
-	int problemCount = 0;
 	while(!isValid){
 		getValidatedString(prompt, inputBuffer, inputBufferSize, verifiers);
 		errno = 0;
@@ -253,13 +259,13 @@ FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVe
 
 	int isValid = 0;
 	while(!isValid){
-		isValid = 1;
 		getValidatedString(prompt, inputBuffer, inputBufferSize, verifiers);
 
 		errno = 0;
 		struct stat thisStat;
 		int statReturnValue = lstat(inputBuffer, &thisStat);
 
+		isValid = 1;
 		if(fileType == INPUT_FILE){
 			// Fail if something went wrong trying to get the input files status (this includes files that don't exist)
 			if (statReturnValue) {
@@ -277,7 +283,7 @@ FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVe
 				}
 
 				// Make sure the current user is actually the owner of the input file
-				if(ownerId != getuid()){
+				if(ownerId != (int)getuid()){
 					printf("\n- You must specify a file that you own\n");
 					isValid = 0;
 				}
@@ -289,24 +295,75 @@ FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVe
 				}
 
 				errno = 0;
-				// Try opening the file, complain of something goes wrong
+				// Try opening the file, complain if something goes wrong
 				if(isValid && !(validFile = fopen(inputBuffer, "r"))){
 					printf("\n- %s\n", strerror(errno));
 					isValid = 0;
 				}
-			}
-		}
+			}// End else
+		}// End if(fileType == INPUT_FILE)
 		else if(fileType == OUTPUT_FILE){
-			if(errno == ENOENT){
+			if(errno != ENOENT){
 				printf("\n- You must specify a file that doesn't exist yet\n");
 				isValid = 0;
 			}
 			else{
 
+				errno = 0;
+				// Try opening a new file for output, if something goes wrong complain
+				if(!(validFile = fopen(inputBuffer, "w"))){
+					printf("\n- %s\n", strerror(errno));
+					isValid = 0;
+				}
+			}// End else
+		}// End if(fileType == OUTPUT_FILE)
+	}// End while(!isValid)
+	return validFile;
+}
+
+void writeOutputFile(char* firstName, char* lastName, long long addResult, long long multResult, FILE* inputFile, FILE* outputFile){
+	char multResultString[21];
+	char addResultString[12];
+	char outputFileHeader[IN_BUFF_LENGTH*2 + sizeof(multResultString) + sizeof(addResultString) + 4];
+
+	snprintf(multResultString, sizeof(multResultString), "%lld", multResult);
+	snprintf(addResultString , sizeof(addResultString) , "%lld", addResult);
+	snprintf(outputFileHeader, sizeof(outputFileHeader), "%s\n%s\n%s\n%s\n", firstName, lastName, addResultString, multResultString);
+
+	char thisChar;
+	int headerIndex = 0;
+	errno = 0;
+	while((thisChar = outputFileHeader[headerIndex++]) != '\0') {
+		putc(thisChar, outputFile);
+		if (errno) {
+			fprintf(stderr, "\n%s\n", strerror(errno));
+			fclose(inputFile);
+			fclose(outputFile);
+			exit(1);
+		}
+	}
+
+	while(!feof(inputFile)){
+		errno = 0;
+		int thisChar = fgetc(inputFile);
+		if(feof(inputFile))
+			break;
+		if(errno){
+			fprintf(stderr, "\n%s\n",strerror(errno));
+			fclose(outputFile);
+			fclose(inputFile);
+			exit(1);
+		}
+		else{
+			errno = 0;
+			putc(thisChar, outputFile);
+			if(errno){
+				fprintf(stderr, "\n%s\n",strerror(errno));
+				fclose(inputFile);
+				fclose(outputFile);
+				exit(1);
 			}
 		}
-
-		isValid = 0;
 	}
-	return validFile;
+
 }
