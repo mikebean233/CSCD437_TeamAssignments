@@ -258,7 +258,7 @@ FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVe
 
 		errno = 0;
 		struct stat thisStat;
-		int statReturnValue = stat(inputBuffer, &thisStat);
+		int statReturnValue = lstat(inputBuffer, &thisStat);
 
 		if(fileType == INPUT_FILE){
 			// Fail if something went wrong trying to get the input files status (this includes files that don't exist)
