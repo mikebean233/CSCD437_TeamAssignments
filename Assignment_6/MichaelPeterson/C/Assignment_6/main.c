@@ -6,12 +6,15 @@
 #include <errno.h>
 #include <memory.h>
 #include <limits.h>
+#include <sys/stat.h>
 
-#define IN_BUFF_LENGTH 50
-#define NUMBER_BUFF_LENGTH 12
-#define READ_WITHIN_BUFFER 0
+#define IN_BUFF_LENGTH       50
+#define NUMBER_BUFF_LENGTH   12
+#define READ_WITHIN_BUFFER   0
 #define READ_EXCEEDED_BUFFER 1
-#define READ_ZERO_BYTES -1
+#define READ_ZERO_BYTES     -1
+#define INPUT_FILE           1
+#define OUTPUT_FILE          2
 
 
 typedef struct {
@@ -21,14 +24,11 @@ typedef struct {
 } regexVerifier;
 
 int isRegexMatch(char *regex, char *input);
-
 int runRegexTestCases(char *regex, char *testCases[]);
-
 void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]);
-
 int readInput(char *inputBuffer, int bufferLength);
-
 long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]);
+FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[], int fileType);
 
 int main(int argc, char** argv) {
 	// First things first, make sure this isn't being ran as root
@@ -36,8 +36,6 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "\nThis program must not be run as the root user!\n");
 		exit(1);
 	}
-
-	printf("\n------------- %s-------------------\n", argv[1]);
 
 #if __GNUC__ < 4
 	fprintf(stderr, "\nThis is only designed to be compiled using GCC 4.0 or newer\n");
@@ -92,8 +90,8 @@ int main(int argc, char** argv) {
 	//getValidatedString("Enter another 32 bit integer:", intB, NUMBER_BUFF_LENGTH, numberVerifiers);
 	long long integerA = getVerifiedInteger("Enter the first 32 bit integer: " ,intA, NUMBER_BUFF_LENGTH, numberVerifiers);
 	long long integerB = getVerifiedInteger("Enter the second 32 bit integer: ",intB, NUMBER_BUFF_LENGTH, numberVerifiers);
-
-	long long result = integerA * integerB;
+	long long addResult  = integerA + integerB;
+	long long multResult = integerA * integerB;
 
 #ifdef TEST
 	runRegexTestCases(numberRegex, numberTestCases);
@@ -108,8 +106,10 @@ int main(int argc, char** argv) {
 			{filenameRegex_InCurrentDir,         1, "you may only specify files in the current directory"},
 			emptyVerifier
 	};
-	getValidatedString("Enter an input filename from the current Directory: " , inFilename , IN_BUFF_LENGTH, filenameVerifiers);
-	getValidatedString("Enter an output filename from the current Directory: ", outFilename, IN_BUFF_LENGTH, filenameVerifiers);
+	//getValidatedString("Enter an input filename from the current Directory: " , inFilename , IN_BUFF_LENGTH, filenameVerifiers);
+	//getValidatedString("Enter an output filename from the current Directory: ", outFilename, IN_BUFF_LENGTH, filenameVerifiers);
+	FILE* inputFile  = getValidFile("Enter an input file path from the current directory" , inFilename , IN_BUFF_LENGTH, filenameVerifiers, INPUT_FILE);
+	FILE* outputFile = getValidFile("Enter an output file path from the current directory", outFilename, IN_BUFF_LENGTH, filenameVerifiers, OUTPUT_FILE);
 
 
 #ifdef TEST
@@ -124,8 +124,8 @@ int main(int argc, char** argv) {
 
 
 
-
-
+	fclose(inputFile);
+	fclose(outputFile);
 	return 0;
 }
 
@@ -246,4 +246,63 @@ long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSiz
  return returnValue;
 }
 
+FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[], int fileType){
+	assert(fileType == INPUT_FILE || fileType == OUTPUT_FILE);
 
+	FILE* validFile = NULL;
+
+	int isValid = 0;
+	while(!isValid){
+		isValid = 1;
+		getValidatedString(prompt, inputBuffer, inputBufferSize, verifiers);
+
+		errno = 0;
+		struct stat thisStat;
+		int statReturnValue = stat(inputBuffer, &thisStat);
+
+		if(fileType == INPUT_FILE){
+			// Fail if something went wrong trying to get the input files status (this includes files that don't exist)
+			if (statReturnValue) {
+				printf("\n- %s\n", strerror(errno));
+				isValid = 0;
+			}
+			else{
+				mode_t mode = thisStat.st_mode;
+				int ownerId = thisStat.st_uid;
+
+				// Make sure we are dealing with a regular file
+				if(!S_ISREG(mode)){
+					printf("\n- You must specify a regular file (directories, character/block devices, named pipes, sockets, and symbolic links are not allowed)\n");
+					isValid = 0;
+				}
+
+				// Make sure the current user is actually the owner of the input file
+				if(ownerId != getuid()){
+					printf("\n- You must specify a file that you own\n");
+					isValid = 0;
+				}
+
+				// Make sure the owner has read privileges
+				if(!(mode & S_IRUSR)){
+					printf("\n- You must specify a file that you have read privileges to\n");
+					isValid = 0;
+				}
+			}
+			if(isValid){
+				validFile = fopen(inputBuffer, "r");
+			}
+		}
+		else if(fileType == OUTPUT_FILE){
+			if(errno == ENOENT){
+				printf("\n- You must specify a file that doesn't exist yet\n");
+				isValid = 0;
+			}
+			else{
+
+			}
+		}
+
+		isValid = 0;
+	}
+	return validFile;
+}
