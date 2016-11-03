@@ -1,15 +1,11 @@
-import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.Scanner;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Assignment6 implements Runnable{
 
     private static String OS = System.getProperty("os.name").toLowerCase();
-    private static final int INPUT_LENGTH_LIMIT = 3;
-
+    private static final int STRING_INPUT_LENGTH = 50;
+    private static final int INT_INPUT_LENGTH    = 11;
 
     public static void main(String[] args) {
         (new Assignment6()).run();
@@ -75,18 +71,18 @@ public class Assignment6 implements Runnable{
          * 1) get first and last name from user
          */
         RegexValidator nameVerifiers[] = {new RegexValidator(nameRegex, true, "You must enter only letters")};
-        firstName = getValidatedString("Enter your first name: ", INPUT_LENGTH_LIMIT, nameVerifiers);
-        lastName  = getValidatedString("Enter your last name: " , INPUT_LENGTH_LIMIT, nameVerifiers);
+        firstName = getValidatedString("Enter your first name: ", STRING_INPUT_LENGTH, nameVerifiers);
+        lastName  = getValidatedString("Enter your last name: " , STRING_INPUT_LENGTH, nameVerifiers);
 
 
         /**
          * 2) get 2 32 bit ints from user
          */
         RegexValidator numberVerifiers[] = {new RegexValidator(numberRegex, true, "you must only enter digits which may be preceded with an \"+\" or \"-\"")};
-        //long long integerA = getVerifiedInteger("Enter the first 32 bit integer: " ,intA, NUMBER_BUFF_LENGTH, numberVerifiers);
-        //long long integerB = getVerifiedInteger("Enter the second 32 bit integer: ",intB, NUMBER_BUFF_LENGTH, numberVerifiers);
-        //long long addResult  = integerA + integerB;
-        //long long multResult = integerA * integerB;
+        long integerA = getValidatedInteger("Enter the first 32 bit integer: ", INT_INPUT_LENGTH, numberVerifiers);
+        long integerB = getValidatedInteger("Enter the second 32 bit integer: ",INT_INPUT_LENGTH, numberVerifiers);
+        long addResult  = integerA + integerB;
+        long multResult = integerA * integerB;
 
         /**
          * 3) get input/output filename from user
@@ -128,11 +124,11 @@ public class Assignment6 implements Runnable{
             thisInput = getInput(inputLength);
 
             if(thisInput.status == UserInputStatus.TooLarge){
-                System.out.println("You Must Enter fewer then " + (inputLength + 1) + " characters, try again:");
+                System.out.println("- you Must Enter fewer then " + (inputLength + 1) + " characters");
                 isValid = false;
             }
             else if(thisInput.status == UserInputStatus.Empty){
-                System.out.println("You must enter something...");
+                System.out.println("- you must enter something...");
             }
             else {
                 for (RegexValidator thisValidator : validators){
@@ -156,20 +152,50 @@ public class Assignment6 implements Runnable{
 
         try {
             while ((thisChar = (char)reader.read()) != '\n') {
-                if(copyCount < length){
-                    value.append((char)thisChar);
-                    ++ copyCount;
-                }
+                if(copyCount++ < length)
+                    value.append(thisChar);
                 else
                     exceededBuffer = true;
             }
         }
         catch(Exception e){
             logError(e.getMessage());
+            System.out.println(e.getMessage());
             System.exit(1);
         }
         return new UserInputResult(value.toString(), (exceededBuffer) ? UserInputStatus.TooLarge : (copyCount == 0) ? UserInputStatus.Empty : UserInputStatus.WithinLimits);
     }
+
+    long getValidatedInteger(String prompt, int length, RegexValidator validators[]){
+        boolean isValid = false;
+
+        long returnValue = 0;
+
+        while(!isValid) {
+            String thisInput = getValidatedString(prompt, length, validators);
+            isValid = true;
+            try {
+                returnValue = Long.parseLong(thisInput);
+                if(returnValue > Integer.MAX_VALUE){
+                    System.out.println("- the provided value exceeds the maximum value for a 32 bit signed integer");
+                    isValid = false;
+                }
+
+                if(returnValue < Integer.MIN_VALUE){
+                    System.out.println("- the provided value is less than the minimum value for a 32 bit signed integer");
+                    isValid = false;
+                }
+            }
+            catch(NumberFormatException e){ // This should never happen...
+                logError(e.getMessage());
+                System.out.println("- " + e.getMessage());
+                isValid = false;
+            }
+        }// End while(!isValid)
+        return returnValue;
+    }
+
+
 
     private void logError(String error){
 
