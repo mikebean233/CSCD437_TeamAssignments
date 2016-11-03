@@ -1,3 +1,6 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -5,13 +8,60 @@ import java.util.regex.Pattern;
 public class Assignment6 implements Runnable{
 
     private static String OS = System.getProperty("os.name").toLowerCase();
+    private static final int INPUT_LENGTH_LIMIT = 3;
+
+
+    public static void main(String[] args) {
+        (new Assignment6()).run();
+    }
+
+
+    private class RegexValidator{
+        public String regex;
+        public Boolean shouldMatch;
+        public String failDescription;
+
+        public RegexValidator(String inRegex, Boolean inShouldMatch, String inFailDescription){
+            if(inRegex == null || inShouldMatch == null || inFailDescription == null)
+                throw new NullPointerException();
+
+            regex = inRegex;
+            shouldMatch = inShouldMatch;
+            failDescription = inFailDescription;
+        }
+
+        public Boolean validate(String input){
+            return shouldMatch == Pattern.compile(regex).matcher(input).matches();
+        }
+    }
+
+    private enum UserInputStatus{
+        Empty,
+        WithinLimits,
+        TooLarge
+    }
+
+    private class UserInputResult{
+        String value;
+        UserInputStatus status;
+
+        public UserInputResult(String inValue, UserInputStatus inStatus){
+            value = inValue;
+            status = inStatus;
+        }
+    }
 
     @Override
     public void run() {
-        if (!(OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0)) {
-            System.err.println("This software is designed to be run on a Linux operating system.");
-            System.exit(1);
-        }
+        //if (!(OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0)) {
+        //    System.err.println("This software is designed to be run on a Linux operating system.");
+        //    System.exit(1);
+        //}
+
+        String firstName, lastName;
+
+
+
 
         // regexes
         String nameRegex = "^[a-zA-Z]{1,}$";
@@ -25,8 +75,8 @@ public class Assignment6 implements Runnable{
          * 1) get first and last name from user
          */
         RegexValidator nameVerifiers[] = {new RegexValidator(nameRegex, true, "You must enter only letters")};
-        //getValidatedString("Enter your first name: ", firstName, IN_BUFF_LENGTH, nameVerifiers);
-        //getValidatedString("Enter your last name: " , lastName,  IN_BUFF_LENGTH, nameVerifiers);
+        firstName = getValidatedString("Enter your first name: ", INPUT_LENGTH_LIMIT, nameVerifiers);
+        lastName  = getValidatedString("Enter your last name: " , INPUT_LENGTH_LIMIT, nameVerifiers);
 
 
         /**
@@ -62,27 +112,67 @@ public class Assignment6 implements Runnable{
     }
 
 
-    private class RegexValidator{
-        public String regex;
-        public Boolean shouldMatch;
-        public String failDescription;
 
-        public RegexValidator(String inRegex, Boolean inShouldMatch, String inFailDescription){
-            if(inRegex == null || inShouldMatch == null || inFailDescription == null)
-                throw new NullPointerException();
+    private String getValidatedString(String prompt, int inputLength, RegexValidator validators[]){
+        if(prompt == null || validators == null)
+            throw new NullPointerException();
 
-            regex = inRegex;
-            shouldMatch = inShouldMatch;
-            failDescription = inFailDescription;
-        }
+        boolean isValid = false;
+        UserInputResult thisInput = null;
 
-        public Boolean validate(String input){
-            return Pattern.compile(regex).matcher(input).matches();
-        }
+        while(!isValid){
+            isValid = true;
+
+            System.out.println(prompt);
+            System.out.println(">");
+            thisInput = getInput(inputLength);
+
+            if(thisInput.status == UserInputStatus.TooLarge){
+                System.out.println("You Must Enter fewer then " + (inputLength + 1) + " characters, try again:");
+                isValid = false;
+            }
+            else if(thisInput.status == UserInputStatus.Empty){
+                System.out.println("You must enter something...");
+            }
+            else {
+                for (RegexValidator thisValidator : validators){
+                    if (!thisValidator.validate(thisInput.value)) {
+                        isValid = false;
+                        System.out.println("- " + thisValidator.failDescription);
+                    }
+                }
+            }
+        }// End while(!isValid)
+        return thisInput.value;
     }
 
+    private UserInputResult getInput(int length){
+        StringBuilder value = new StringBuilder();
+        //Scanner scanner = new Scanner(System.in);
+        InputStreamReader reader = new InputStreamReader(System.in);
+        int copyCount = 0;
+        char thisChar = 0;
+        boolean exceededBuffer = false;
 
-    public static void main(String[] args) {
-        (new Assignment6()).run();
+        try {
+            while ((thisChar = (char)reader.read()) != '\n') {
+                if(copyCount < length){
+                    value.append((char)thisChar);
+                    ++ copyCount;
+                }
+                else
+                    exceededBuffer = true;
+            }
+        }
+        catch(Exception e){
+            logError(e.getMessage());
+            System.exit(1);
+        }
+        return new UserInputResult(value.toString(), (exceededBuffer) ? UserInputStatus.TooLarge : (copyCount == 0) ? UserInputStatus.Empty : UserInputStatus.WithinLimits);
     }
+
+    private void logError(String error){
+
+    }
+
 }
