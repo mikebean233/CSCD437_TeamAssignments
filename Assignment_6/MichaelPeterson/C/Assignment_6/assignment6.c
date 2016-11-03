@@ -31,7 +31,7 @@ void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, re
 int readInput(char *inputBuffer, int bufferLength);
 long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]);
 FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[], int fileType);
-void writeOutputFile(char* firstName, char* lastName, long long addResult, long long multResult, FILE* inputFile, FILE* outputFile);
+void writeOutputFile(char* firstName, char* lastName, long long addResult, long long multResult, FILE* inputFile, FILE* outputFile, FILE* logFile);
 void doPasswordThing(char* prompt, regexVerifier verifiers[]);
 
 int main() {
@@ -59,6 +59,9 @@ int main() {
 	char inFilename[IN_BUFF_LENGTH], outFilename[IN_BUFF_LENGTH];
 	char intA[NUMBER_BUFF_LENGTH], intB[NUMBER_BUFF_LENGTH];
 
+	// file pointers
+	FILE *inputFile = NULL, *outputFile = NULL, *logFile = NULL;
+
 	// regexes
 	char *nameRegex = "^[a-zA-Z]{1,}$";
 	char *numberRegex = "^(()|\\+|\\-)[0-9]{1,10}$";
@@ -69,18 +72,27 @@ int main() {
 
 #ifdef TEST
 	// Regex test cases
-	char * nameTestCases[]     = {"", "\0", "\n", "", "Jhon", " Jhon", "1ll124lk1 1 4l ", "bob", "a", "13", "bob ", 0};
+	char * nameTestCases[]     = {"", "\0", "\n", "Jhon", " Jhon", "1ll124lk1 1 4l ", "bob", "a", "13", "bob ", 0};
 	char * numberTestCases[]   = {"", "\0", "\n", "0", " 0", "0 ", " 0 ", "-0", "+0", "123", "-123", "+123", "- 123", "123-", "+0123546789", "+01235467891", " ", "apple", 0};
-	char * filenameTestCases[] = {"", "\0", "\n", "", "file.dog", "file.Txt", "file.txt", "./file/../.txt", "/file.txt", "./file.txt", "../file.txt", "/../file.txt", "./ /", 0};
+	char * filenameTestCases[] = {"", "\0", "\n", "file.dog", "file.Txt", "file.txt", "./file/../.txt", "/file.txt", "./file.txt", "../file.txt", "/../file.txt", "./ /", 0};
+	char * passwordTestCases[] = {"", "\0", "\n", "abcde", "Slg3k4k23j4Dkj4k23j4kn234jh", ";2l23k23l SFLk#lk429' saf\nsf3 ", 0};
 
-	runRegexTestCases(nameRegex, nameTestCases);
-	runRegexTestCases(numberRegex, numberTestCases);
-	runRegexTestCases(filenameRegex_InCurrentDir,         filenameTestCases);
+	runRegexTestCases(nameRegex                         , nameTestCases);
+	runRegexTestCases(numberRegex                       , numberTestCases);
+	runRegexTestCases(filenameRegex_InCurrentDir        , filenameTestCases);
 	runRegexTestCases(filenameRegex_HasAcceptedExtension, filenameTestCases);
-	runRegexTestCases(filenameRegex_HasRelativePath,      filenameTestCases);
+	runRegexTestCases(filenameRegex_HasRelativePath     , filenameTestCases);
+	runRegexTestCases(passwordRegex                     , passwordTestCases);
 #endif
 
 	regexVerifier emptyVerifier = {NULL, 0, NULL};
+
+	// Try to open a log file for output
+	errno = 0;
+	if(!(logFile = fopen("error.log", "w"))){
+		fprintf(stderr, "\n%s\n", strerror(errno));
+		exit(1);
+	}
 
 	/**
 	 * 1) get first and last name from user
@@ -88,7 +100,6 @@ int main() {
 	regexVerifier nameVerifiers[] = {{nameRegex, 1, "You must enter only letters"}, emptyVerifier};
 	getValidatedString("Enter your first name: ", firstName, IN_BUFF_LENGTH, nameVerifiers);
 	getValidatedString("Enter your last name: " , lastName,  IN_BUFF_LENGTH, nameVerifiers);
-
 
 	/**
 	 * 2) get 2 32 bit ints from user
@@ -108,18 +119,20 @@ int main() {
 			{filenameRegex_InCurrentDir,         1, "you may only specify files in the current directory"},
 			emptyVerifier
 	};
-	FILE* inputFile  = getValidFile("Enter an input file path from the current directory" , inFilename , IN_BUFF_LENGTH, filenameVerifiers, INPUT_FILE);
-	FILE* outputFile = getValidFile("Enter an output file path from the current directory", outFilename, IN_BUFF_LENGTH, filenameVerifiers, OUTPUT_FILE);
-	writeOutputFile(firstName, lastName, addResult, multResult, inputFile, outputFile);
-
+	inputFile  = getValidFile("Enter an input file path from the current directory" , inFilename , IN_BUFF_LENGTH, filenameVerifiers, INPUT_FILE);
+	outputFile = getValidFile("Enter an output file path from the current directory", outFilename, IN_BUFF_LENGTH, filenameVerifiers, OUTPUT_FILE);
+	writeOutputFile(firstName, lastName, addResult, multResult, inputFile, outputFile, logFile);
 
 	/**
 	 * 4) get password from user
 	 */
 	regexVerifier passwordVerifiers[] = {{passwordRegex, 1, "You must enter between 12 and 56 characters all of which must be numbers or letters"}, emptyVerifier};
 	doPasswordThing("Enter a password between 12 and 56 characters that only contains numbers and letters", passwordVerifiers);
+
 	fclose(inputFile);
 	fclose(outputFile);
+	fclose(logFile);
+
 	return 0;
 }// End Main
 
@@ -318,7 +331,7 @@ FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVe
 	return validFile;
 }
 
-void writeOutputFile(char* firstName, char* lastName, long long addResult, long long multResult, FILE* inputFile, FILE* outputFile){
+void writeOutputFile(char* firstName, char* lastName, long long addResult, long long multResult, FILE* inputFile, FILE* outputFile, FILE* logFile){
 	char multResultString[21];
 	char addResultString[12];
 	char outputFileHeader[IN_BUFF_LENGTH*2 + sizeof(multResultString) + sizeof(addResultString) + 4];
@@ -346,7 +359,9 @@ void writeOutputFile(char* firstName, char* lastName, long long addResult, long 
 		if(feof(inputFile))
 			break;
 		if(errno){
-			fprintf(stderr, "\n%s\n",strerror(errno));
+			char* errorOutput = strerror(errno);
+			printf("\n%s\n",errorOutput);
+			fprintf(logFile, "%s\n",errorOutput);
 			fclose(outputFile);
 			fclose(inputFile);
 			exit(1);
@@ -355,7 +370,9 @@ void writeOutputFile(char* firstName, char* lastName, long long addResult, long 
 			errno = 0;
 			putc(thisChar, outputFile);
 			if(errno){
-				fprintf(stderr, "\n%s\n",strerror(errno));
+				char* errorOutput = strerror(errno);
+				printf("\n%s\n",errorOutput);
+				fprintf(logFile, "%s\n",errorOutput);
 				fclose(inputFile);
 				fclose(outputFile);
 				exit(1);
