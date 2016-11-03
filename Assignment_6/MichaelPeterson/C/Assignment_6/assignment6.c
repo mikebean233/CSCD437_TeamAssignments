@@ -7,6 +7,8 @@
 #include <memory.h>
 #include <limits.h>
 #include <sys/stat.h>
+#include <time.h>
+#include "md5.h"
 
 #define IN_BUFF_LENGTH       50
 #define NUMBER_BUFF_LENGTH   12
@@ -30,6 +32,7 @@ int readInput(char *inputBuffer, int bufferLength);
 long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]);
 FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[], int fileType);
 void writeOutputFile(char* firstName, char* lastName, long long addResult, long long multResult, FILE* inputFile, FILE* outputFile);
+void doPasswordThing(char* prompt, regexVerifier verifiers[]);
 
 int main() {
 	// First things first, make sure this isn't being ran as root
@@ -62,13 +65,13 @@ int main() {
 	char *filenameRegex_InCurrentDir = "^(\\.\\/|[^\\/])[a-zA-Z0-9\\s]+(\\.[a-zA-Z]{1,4})$";
 	char *filenameRegex_HasAcceptedExtension = "\\.(text|txt)$"; // White list of valid extensions, we need more ideas ...
 	char *filenameRegex_HasRelativePath = "\\.\\.";
+	char *passwordRegex = "^[0-9a-zA-Z]{12,56}$";
 
 #ifdef TEST
 	// Regex test cases
 	char * nameTestCases[]     = {"", "\0", "\n", "", "Jhon", " Jhon", "1ll124lk1 1 4l ", "bob", "a", "13", "bob ", 0};
 	char * numberTestCases[]   = {"", "\0", "\n", "0", " 0", "0 ", " 0 ", "-0", "+0", "123", "-123", "+123", "- 123", "123-", "+0123546789", "+01235467891", " ", "apple", 0};
 	char * filenameTestCases[] = {"", "\0", "\n", "", "file.dog", "file.Txt", "file.txt", "./file/../.txt", "/file.txt", "./file.txt", "../file.txt", "/../file.txt", "./ /", 0};
-
 
 	runRegexTestCases(nameRegex, nameTestCases);
 	runRegexTestCases(numberRegex, numberTestCases);
@@ -113,9 +116,8 @@ int main() {
 	/**
 	 * 4) get password from user
 	 */
-
-
-
+	regexVerifier passwordVerifiers[] = {{passwordRegex, 1, "You must enter between 12 and 56 characters all of which must be numbers or letters"}, emptyVerifier};
+	doPasswordThing("Enter a password between 12 and 56 characters that only contains numbers and letters", passwordVerifiers);
 	fclose(inputFile);
 	fclose(outputFile);
 	return 0;
@@ -312,6 +314,7 @@ FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVe
 			}// End else
 		}// End if(fileType == OUTPUT_FILE)
 	}// End while(!isValid)
+
 	return validFile;
 }
 
@@ -358,6 +361,69 @@ void writeOutputFile(char* firstName, char* lastName, long long addResult, long 
 				exit(1);
 			}
 		}
+	}
+
+}
+
+void doPasswordThing(char* prompt, regexVerifier verifiers[]){
+	char password[64];
+	char passwordGuess[sizeof(password)];
+	unsigned int originalHash[4];
+	unsigned int guessHash[4];
+	char salt[8];
+
+	// generate a random salt
+	srand(clock());
+	int i;
+	for(i = 0; i < (int)sizeof(salt); ++i)
+		salt[i] = (char)((rand() % (UCHAR_MAX - 1)) +1);
+
+	// get the password from the user
+	getValidatedString(prompt,password, sizeof(password) + 8, verifiers);
+	int passwordLength = strlen((char*)password);
+
+	// Append the salt to the end of the string and fill the rest with '\0's
+	int saltIndex = 0;
+	for(i = passwordLength; i < passwordLength + (int)sizeof(salt); ++i)
+		password[i] = salt[saltIndex++];
+	for(; i < (int)sizeof(password); ++i)
+		password[i] = '\0';
+
+	// Generate the md5 hash
+	md5_vfy((unsigned char*)password, sizeof(password), originalHash, originalHash+1, originalHash+2, originalHash+3);
+
+	// Empty the original password
+	for(i = 0; i < (int)sizeof(password); ++i)
+		password[i] = '\0';
+
+	int foundPassword = 0;
+	while(!foundPassword){
+		foundPassword = 1;
+
+		// Get the password guess from the user
+		getValidatedString("Enter your password guess", passwordGuess, sizeof(passwordGuess), verifiers);
+		int passwordGuestLength = strlen((char*)passwordGuess);
+
+		// Append the salt to the end of the string and fill the rest with '\0's
+		saltIndex = 0;
+		for(i = passwordLength; i < passwordGuestLength + (int)sizeof(salt); ++i)
+			passwordGuess[i] = salt[saltIndex++];
+		for(; i < (int)sizeof(password); ++i)
+			passwordGuess[i] = '\0';
+
+		// Hash the password
+		md5_vfy((unsigned char*)passwordGuess, sizeof(password), guessHash, guessHash+1, guessHash+2, guessHash+3);
+
+		for(i = 0; i < 4; ++i)
+			if(originalHash[i] != guessHash[i])
+				foundPassword = 0;
+
+		if(foundPassword){
+			printf("\ncongratulations, you found the password!!\n\n");
+			break;
+		}
+		else
+			printf("\n- That was the wrong password\n");
 	}
 
 }
