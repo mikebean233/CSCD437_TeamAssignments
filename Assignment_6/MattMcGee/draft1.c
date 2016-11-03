@@ -79,6 +79,13 @@ long long int val = strtoll(inBuff);
 // Salt and hash password
 // Maximum length of 128 characters is common
 // Escape characters in password?
+// github for Argon2:
+//https://github.com/P-H-C/phc-winner-argon2
+// If you scroll down to the Library heading, there is some example code.
+
+// My password regex:
+//	Pattern pattern = Pattern.compile("^(?!(.*[a-z][a-z][a-z][a-z].*))(?=(.*[a-z].*))(?=(.*[A-Z].*))(?=.*\\d.*)(?=.*\\W.*)[a-zA-Z0-9\\S]{10,}$");// Matches at least 10 characters, with at least one upper case, one lower case, one digit, and one special character, and not allowing more than 3 consecutive lower-case letters
+
 
 //6a.
 // Open output file: fopen()
