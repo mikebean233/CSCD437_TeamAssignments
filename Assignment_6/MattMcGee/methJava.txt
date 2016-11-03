@@ -1,0 +1,118 @@
+Java implementations:
+
+OS:
+I can't find any vulnerabilities in Java due to using compilers other than javac.
+
+Determining OS:
+
+System.getProperty("os.name")
+
+ or:
+ 
+class ShowProperties {
+    public static void main(String[] args) {
+        System.getProperties().list(System.out);
+    }
+}
+
+
+
+
+1. User's first and last name
+JAVA:
+boolean canRead(filename) // True if application can write to file
+ boolean canWrite(filename) // True if application can write to file
+ public boolean exists() // Tests whether the file or directory denoted by this abstract pathname exists.
+
+ Limiting access to current working directory. Not sure how these work. Seems like there should be a simple way to limit user access to CWD:
+
+	import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+-------------------------------------------------------------------------------------------------------------------------------------
+2. Read in two 32-bit ints.
+Java long is the same as C longlong: -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807
+
+Upcasting. Cast the inputs to the next larger primitive integer type and perform the arithmetic in the larger size.
+*****Check each intermediate result for overflow of the original smaller type and throw an ArithmeticException if the range check fails. Note that the range check must be performed after each arithmetic operation; larger expressions without per-operation bounds checking can overflow the larger type.*****
+Downcast the final result to the original smaller type before assigning to a variable of the original smaller type.
+---------------------------------------------------------------------------------------------------------------------------------------
+3. Prompt for the name of an input file:
+/ Confirm that what you're looking at is a file:
+
+https://docs.oracle.com/javase/8/docs/api/java/nio/file/Files.html#notExists-java.nio.file.Path-java.nio.file.LinkOption...-
+public static boolean isReadable(Path path)
+checks that a file exists and that this Java virtual machine has appropriate privileges that would allow it open the file for reading
+
+Parameters:
+    path - the path to the file to check
+Returns:
+    true if the file exists and is readable; false if the file does not exist, read access would be denied because the Java virtual machine has insufficient privileges, or access cannot be determined
+Throws:
+    SecurityException - In the case of the default provider, and a security manager is installed, the checkRead is invoked to check read access to the file. 
+........................................................................................
+
+https://docs.oracle.com/javase/tutorial/essential/io/check.html
+Verifying the Existence of a File or Directory
+
+... eventually you must access the file system to verify that a particular Path exists, or does not exist. You can do so with the
+exists(Path, LinkOption...) and the notExists(Path, LinkOption...) methods. When you are testing a file's existence, three results are possible:
+
+    The file is verified to exist.
+    The file is verified to not exist.
+    The file's status is unknown. This result can occur when the program does not have access to the file.
+
+If both exists and notExists return false, the existence of the file cannot be verified.
+...................................................................
+// Limit length of filename
+// How to prevent bad filename? No writing to or from bin or root ----> don't allow "/" or ".." or "/./." or ":" in filename
+// lstat() doesn't allow symbolic links
+// Only files that current user with current priveledge can read from:
+Checking File Accessibility
+
+To verify that the program can access a file as needed, you can use the isReadable(Path), isWritable(Path), and isExecutable(Path) methods.
+
+The following code snippet verifies that a particular file exists and that the program has the ability to execute the file.
+
+Path file = ...;
+boolean isRegularExecutableFile = Files.isRegularFile(file) &
+         Files.isReadable(file) & Files.isExecutable(file);
+
+Note: Once any of these methods completes, there is no guarantee that the file can be accessed. A common security flaw in many applications is to perform a check and then access the file. For more information, use your favorite search engine to look up TOCTTOU (pronounced TOCK-too).
+.......................................................................
+// Limit the size of the input file.
+
+...........................................................................
+// Make sure the file doesn't already exist:
+Checking Whether Two Paths Locate the Same File
+
+When you have a file system that uses symbolic links, it is possible to have two different paths that locate the same file. The isSameFile(Path, Path) method compares two paths to determine if they locate the same file on the file system. For example:
+
+Path p1 = ...;
+Path p2 = ...;
+
+if (Files.isSameFile(p1, p2)) {
+    // Logic when the paths locate the same file
+}
+..........................................................................
+--------------------------------------------------------------------------------------------------------------------------------------
+4. Prompt for the name of an output file:
+
+exists(Path, LinkOption...) or
+notExists(Path, LinkOption...)
+
+------------------------------------------------------------------------------------------------------------------------------------
+5. Password:
+https://docs.oracle.com/javase/7/docs/api/java/security/SecureRandom.html
+
+ Typical callers of SecureRandom invoke the following methods to retrieve random bytes:
+
+      SecureRandom random = new SecureRandom();
+      byte bytes[] = new byte[20];
+      random.nextBytes(bytes);
+ 
+
+Callers may also invoke the generateSeed method to generate a given number of seed bytes (to seed other random number generators, for example):
+
+      byte seed[] = random.generateSeed(20);
+ 
