@@ -3,7 +3,7 @@
 
 #define _GNU_SOURCE
 
-#define IN_BUFF_LENGTH       50
+#define IN_BUFF_LENGTH       51
 #define NUMBER_BUFF_LENGTH   12
 #define READ_WITHIN_BUFFER   0
 #define READ_EXCEEDED_BUFFER 1

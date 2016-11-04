@@ -14,8 +14,8 @@ import java.security.SecureRandom;
 public class Assignment6 implements Runnable{
 
     private static String OS = System.getProperty("os.name").toLowerCase();
-    private static final int STRING_INPUT_LENGTH = 51;
-    private static final int INT_INPUT_LENGTH    = 12;
+    private static final int STRING_INPUT_LENGTH = 50;
+    private static final int INT_INPUT_LENGTH    = 11;
     private static final int PWD_INPUT_LENGTH    = 64;
     private static boolean TEST                  = true;
 
@@ -98,29 +98,32 @@ public class Assignment6 implements Runnable{
         }
 
 
+
         // regexes
         String nameRegex = "^[a-zA-Z]{1,}$";
         String numberRegex = "^(()|\\+|\\-)[0-9]{1,10}$";
         String filenameRegex_InCurrentDir = "^(\\.\\/|[^\\/])[a-zA-Z0-9\\s]+(\\.[a-zA-Z]{1,4})$";
         String filenameRegex_HasAcceptedExtension = "[^\\.]{1,}\\.(text|txt)$"; // White list of valid extensions, we need more ideas ...
         String filenameRegex_HasRelativePath = "\\.\\.";
-        String passwordRegex = "^(?=(.*[a-z].*))(?=(.*[A-Z].*))(?=.*\\d.*)(?=.*\\W.*)[a-zA-Z0-9\\S]{12,56}$";
+        //String passwordRegex = "[a-z]*";//"^(?=(.*[a-z].*))(?=(.*[A-Z].*))(?=.*\\\\d.*)(?=.*\\\\W.*)[a-zA-Z0-9\\\\S]{12,56}$";
+        char *passwordRegex1 = "[a-z]+";
+	char *passwordRegex2 = "[A-Z]+";
+	char *passwordRegex3 = "[0-9]+";
+	char *passwordRegex4 = "[`~!@#$%^&*()_+=]+";
+
 
         if(TEST){
-            String nameTestCases[]     = {"", "\0", "\n", "Jhon", " Jhon", "1ll124lk1 1 4l ", "bob", "a", "13", "bob ", "0", "..", "Jo hn"};
-            String numberTestCases[]   = {"", "\0", "\n", "0", " 0", "0 ", " 0 ", "-0", "+0", "123", "-123", "+123", "- 123", "123-", "+0123546789", "+01235467891", " ", "apple", "abc", "-12345678901", "--12345678", "-+34567890", "- 34567890", "123456789-","123456789 +", "123456789++", "-123456789-", "(123*456)", "0000000000", "-0000000000", "*1234567890", "1-23456789", "--", "--0", "0000000000000001"};
-            String filenameTestCases[] = {"", "\0", "\n", "file.dog", "file.Txt", "file.txt", "./file/../.txt", "/file.txt", "./file.txt", "../file.txt", "/../file.txt", "./ /", "\\/bin\\/file.txt", "*.txt", "file.*"};
-            String passwordTestCases[] = {"", "\0", "\n", "abcde", "Slg3k4k23j4Dkj4k23j4kn234jh", "2l23k23ISFLk#lk429safnsf3", "2l23k23lSFLk#lk429saf\nsf3", ";2l23k23l SFLk#lk429'saf\nsf3 ", "abcDEF123@#$abc", "!@12asAS90123456fifty-one-charachers789012345678901","abCD$%789012345fifty-characters2345678901234567890"};
+            String nameTestCases[]     = {"", "\0", "\n", "Jhon", " Jhon", "1ll124lk1 1 4l ", "bob", "a", "13", "bob "};
+            String numberTestCases[]   = {"", "\0", "\n", "0", " 0", "0 ", " 0 ", "-0", "+0", "123", "-123", "+123", "- 123", "123-", "+0123546789", "+01235467891", " ", "apple"};
+            String filenameTestCases[] = {"", "\0", "\n", "file.dog", "file.Txt", "file.txt", "./file/../.txt", "/file.txt", "./file.txt", "../file.txt", "/../file.txt", "./ /"};
+            String passwordTestCases[] = {"", "\0", "\n", "abcde", "Slg3k4k23j4Dkj4k23j4kn234jh", ";2l23k23l SFLk#lk429' saf\nsf3 "};
 
             runRegexTestCases(nameRegex                         , nameTestCases);
             runRegexTestCases(numberRegex                       , numberTestCases);
             runRegexTestCases(filenameRegex_InCurrentDir        , filenameTestCases);
             runRegexTestCases(filenameRegex_HasAcceptedExtension, filenameTestCases);
             runRegexTestCases(filenameRegex_HasRelativePath     , filenameTestCases);
-            runRegexTestCases(passwordRegex                    , passwordTestCases);
-	    // runRegexTestCases(passwordRegex_hasUpperCase                    , passwordTestCases);
-	    // runRegexTestCases(passwordRegex_hasDigit                     , passwordTestCases);
-	    // runRegexTestCases(passwordRegex_hasPunct                     , passwordTestCases);
+            runRegexTestCases(passwordRegex                     , passwordTestCases);
         }
 
 
@@ -135,7 +138,7 @@ public class Assignment6 implements Runnable{
         /**
          * 2) get 2 32 bit ints from user
          */
-        RegexValidator numberVerifiers[] = {new RegexValidator(numberRegex, true, "You must only enter a maximum of ten digits, which may be preceded with an \"+\" or \"-\"")};
+        RegexValidator numberVerifiers[] = {new RegexValidator(numberRegex, true, "you must only enter digits which may be preceded with an \"+\" or \"-\"")};
         long integerA = getValidInteger("Enter the first 32 bit integer: ", INT_INPUT_LENGTH, numberVerifiers);
         long integerB = getValidInteger("Enter the second 32 bit integer: ",INT_INPUT_LENGTH, numberVerifiers);
         long addResult  = integerA + integerB;
@@ -145,9 +148,9 @@ public class Assignment6 implements Runnable{
          * 3) get input/output filename from user
          */
         RegexValidator filenameValidators[] = {
-            new RegexValidator(filenameRegex_HasAcceptedExtension, true, "Only files with the extensions .txt and .text are allowed"),
-            new RegexValidator(filenameRegex_HasRelativePath,      false, "You are not allowed to use relative paths"),
-            new RegexValidator(filenameRegex_InCurrentDir,         true, "You may only specify files in the current directory"),
+            new RegexValidator(filenameRegex_HasAcceptedExtension, true, "only files with the extensions .txt and .text are allowed"),
+            new RegexValidator(filenameRegex_HasRelativePath,      false, "you are not allowed to use relative paths"),
+            new RegexValidator(filenameRegex_InCurrentDir,         true, "you may only specify files in the current directory"),
         };
         inputFile = getValidFile("Enter an input file path from the current directory"  , STRING_INPUT_LENGTH, filenameValidators, FileType.Input);
         outputFile = getValidFile("Enter an output file path from the current directory", STRING_INPUT_LENGTH, filenameValidators, FileType.Output);
@@ -156,9 +159,8 @@ public class Assignment6 implements Runnable{
         /**
          * 4) get password from user
          */
-	 RegexValidator passwordVerifiers[] = {new RegexValidator(passwordRegex, true, "Criteria not met.")};
-	
-        doPasswordThing("Enter a password between 12 and 56 characters that contains one lower-case letter, one upper-case letter, one numerical digit, and one symbol.", passwordVerifiers);
+        RegexValidator passwordVerifiers[] = {new RegexValidator(passwordRegex, true, "You must enter between 12 and 56 characters with at least one upper case, one lower chase, one digit, and one symbol")};
+        doPasswordThing("Enter a password between 12 and 56 characters that only contains numbers and letters", passwordVerifiers);
     }
 
     private void doPasswordThing(String prompt, RegexValidator validators[]){
@@ -178,7 +180,7 @@ public class Assignment6 implements Runnable{
 
 
             while(!isValid){
-                String passwordGuess = getValidString("Re-enter your password", PWD_INPUT_LENGTH, validators);
+                String passwordGuess = getValidString(prompt, PWD_INPUT_LENGTH, validators);
 
                 // Get the hash of the guess
                 byte[] guessHash = SecretKeyFactory
@@ -187,11 +189,11 @@ public class Assignment6 implements Runnable{
                         .getEncoded();
 
                 if(Arrays.equals(originalHash, guessHash)){
-                    System.out.println("Cogratulations, you matched your own password!");
+                    System.out.println("contratulations, you found the password!!");
                     isValid = true;
                 }
                 else{
-                    System.out.println("- That was the wrong password");
+                    System.out.println("- that was the wrong password");
                     isValid = false;
                 }
             }// End while
@@ -218,11 +220,11 @@ public class Assignment6 implements Runnable{
             thisInput = getInput(inputLength);
 
             if(thisInput.status == UserInputStatus.TooLarge){
-                System.out.println("- You must enter fewer than " + (inputLength - 1) + " characters");
+                System.out.println("- you Must Enter fewer then " + (inputLength + 1) + " characters");
                 isValid = false;
             }
             else if(thisInput.status == UserInputStatus.Empty){
-                System.out.println("- You must enter something.");
+                System.out.println("- you must enter something...");
             }
             else {
                 for (RegexValidator thisValidator : validators){
@@ -271,12 +273,12 @@ public class Assignment6 implements Runnable{
             try {
                 returnValue = Long.parseLong(thisInput);
                 if(returnValue > Integer.MAX_VALUE){
-                    System.out.println("- The provided value exceeds the maximum value for a 32 bit signed integer");
+                    System.out.println("- the provided value exceeds the maximum value for a 32 bit signed integer");
                     isValid = false;
                 }
 
                 if(returnValue < Integer.MIN_VALUE){
-                    System.out.println("- The provided value is less than the minimum value for a 32 bit signed integer");
+                    System.out.println("- the provided value is less than the minimum value for a 32 bit signed integer");
                     isValid = false;
                 }
             }
@@ -303,7 +305,7 @@ public class Assignment6 implements Runnable{
                 isValid = true;
                 if (type == FileType.Input) {
                     if(!exists){
-                        System.out.println("- You must specify an input file that exists.");
+                        System.out.println("- you must specify an input file that exists...");
                         isValid = false;
                     }
                     else{
@@ -313,7 +315,7 @@ public class Assignment6 implements Runnable{
 
                         // Make sure we are dealing with a regular file
                         if(!attributes.readAttributes().isRegularFile()){
-                            System.out.println("- You must specify a regular file (directories, character/block devices, named pipes, sockets, and symbolic links are not allowed.)");
+                            System.out.println("- You must specify a regular file (directories, character/block devices, named pipes, sockets, and symbolic links are not allowed)");
                             isValid = false;
                         }
 
@@ -332,7 +334,7 @@ public class Assignment6 implements Runnable{
                     }// End else
                 } else if (type == FileType.Output) {
                     if(exists){
-                        System.out.println("- You must specify a file that doesn't exist already");
+                        System.out.println("- you must specify a file that doesn't exist already");
                         isValid = false;
                     }
                     else{

@@ -56,20 +56,17 @@ int main() {
 	char *filenameRegex_InCurrentDir = "^(\\.\\/|[^\\/])[a-zA-Z0-9\\s]+(\\.[a-zA-Z]{1,4})$";
 	char *filenameRegex_HasAcceptedExtension = "\\.(text|txt)$"; // White list of valid extensions, we need more ideas ...
 	char *filenameRegex_HasRelativePath = "\\.\\.";
-	//char *passwordRegex = "^[a-zA-Z0-9\\S]{12,56}$";
 	char *passwordRegex1 = "[a-z]+";
 	char *passwordRegex2 = "[A-Z]+";
 	char *passwordRegex3 = "[0-9]+";
-	char *passwordRegex4 = "[`~!@#$%^&*()_\\-+=\\|\\]\\}\\[\\{\"\'\\;\\:\\?\\.\\>\\,\\<]+";
-
-
+	char *passwordRegex4 = "[`~!@#$%^&*()_+=]+";
 
 #ifdef TEST
 	// Regex test cases
 	char * nameTestCases[]     = {"", "\0", "\n", "Jhon", " Jhon", "1ll124lk1 1 4l ", "bob", "a", "13", "bob ", "0", "..", "Jo hn", 0};
-	char * numberTestCases[]   = {"", "\0", "\n", "0", " 0", "0 ", " 0 ", "-0", "+0", "123", "-123", "+123", "- 123", "123-", "+0123546789", "+01235467891", " ", "apple", "abc", "-12345678901", "--12345678", "-+34567890", "234567890", "- 34567890", "123456789-","123456789 +", "123456789++", "-123456789-", "(123*456)", "0000000000", "-0000000000", "*1234567890", "1-23456789", "--", "--0", 0};
-	char * filenameTestCases[] = {"", "\0", "\n", "file.dog", "file.Txt", "file.txt", "./file/../.txt", "/file.txt", "./file.txt", "../file.txt", "/../file.txt", "./ /", 0};
-	char * passwordTestCases[] = {"", "\0", "\n", "abcde", "Slg3k4k23j4Dkj4k23j4kn234jh", ";2l23k23l SFLk#lk429' saf\nsf3 ", "abcDEF123@#$abc", 0};
+	char * numberTestCases[]   = {"", "\0", "\n", "0", " 0", "0 ", " 0 ", "-0", "+0", "123", "-123", "+123", "- 123", "123-", "+0123546789", "+01235467891", " ", "apple", "abc", "-12345678901", "--12345678", "-+34567890", "- 34567890", "123456789-","123456789 +", "123456789++", "-123456789-", "(123*456)", "0000000000", "-0000000000", "*1234567890", "1-23456789", "--", "--0", "0000000000000001", 0};
+	char * filenameTestCases[] = {"", "\0", "\n", "file.dog", "file.Txt", "file.txt", "./file/../.txt", "/file.txt", "./file.txt", "../file.txt", "/../file.txt", "./ /", "\\/bin\\/file.txt", "*.txt", "file.*",  0};
+	char * passwordTestCases[] = {"", "\0", "\n", "abcde", "Slg3k4k23j4Dkj4k23j4kn234jh", ";2l23k23l SFLk#lk429' saf\nsf3 ", "abcDEF123@#$abc", "!@12asAS90123456fifty-one-charachers789012345678901","abCD$%789012345fifty-characters2345678901234567890", 0};
 
 	runRegexTestCases(nameRegex                         , nameTestCases);
 	runRegexTestCases(numberRegex                       , numberTestCases);
@@ -126,7 +123,7 @@ int main() {
 	 */
 	regexVerifier passwordVerifiers[] = {{passwordRegex1, 1, "You must enter between 12 and 56 characters with at least one upper case, one lower chase, one digit, and one symbol"}, {passwordRegex2, 1, "You must enter between 12 and 56 characters with at least one upper case, one lower chase, one digit, and one symbol"}, {passwordRegex3, 1, "You must enter between 12 and 56 characters with at least one upper case, one lower chase, one digit, and one symbol"}, {passwordRegex4, 1, "You must enter between 12 and 56 characters with at least one upper case, one lower chase, one digit, and one symbol"}, emptyVerifier};
 
-	doPasswordThing("Enter a password between 12 and 56 characters that only contains numbers and letters", passwordVerifiers);
+	doPasswordThing("Enter a password of 12-56 characters, with at least one capital, one lower case, one digit, and one special ( `~!@#$%^&*()_+= ) symbol: ", passwordVerifiers);
 
 	fclose(inputFile);
 	fclose(outputFile);
@@ -198,7 +195,7 @@ void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, re
 		printf("\n%s\n>", prompt);
 		int readResult = readInput(inputBuffer, inputBufferSize);
 		if (readResult == READ_EXCEEDED_BUFFER) {
-			printf("\nYou must enter fewer than %d characters, try again:\n", inputBufferSize);
+			printf("\nYou must enter %d or fewer characters. Try again:\n", inputBufferSize - 1 );
 			isValid = 0;
 		} else if (readResult == READ_ZERO_BYTES) {
 			printf("\nYou must enter something...\n");
