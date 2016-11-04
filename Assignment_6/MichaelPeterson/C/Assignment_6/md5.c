@@ -81,10 +81,10 @@ void md5_vfy(unsigned char* data, unsigned int length, unsigned int *a1, unsigne
 unsigned int vals[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 int i = 0;
-
-for(i=0; i < length; i++)
+int k = 0;
+for(i=0; i < length; i++, k = i % sizeof(vals))
 {
-    vals[i / 4] |= data[i] << ((i % 4) * 8);
+    vals[k / 4] |= data[k] << ((k % 4) * 8);
 }
 vals[i / 4] |= 0x80 << ((i % 4) * 8);
 
