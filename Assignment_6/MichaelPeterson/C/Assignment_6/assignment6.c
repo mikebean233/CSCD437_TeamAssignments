@@ -1,3 +1,5 @@
+#include "assignment6.h"
+
 #include <stdio.h>
 #include <regex.h>
 #include <stdlib.h>
@@ -7,23 +9,9 @@
 #include <memory.h>
 #include <limits.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include "md5.h"
-
-#define IN_BUFF_LENGTH       50
-#define NUMBER_BUFF_LENGTH   12
-#define READ_WITHIN_BUFFER   0
-#define READ_EXCEEDED_BUFFER 1
-#define READ_ZERO_BYTES     -1
-#define INPUT_FILE           1
-#define OUTPUT_FILE          2
-
-
-typedef struct {
-	char *regex;
-	int shouldMatch; // 1: true, 0: false
-	char *failDescription;
-} regexVerifier;
 
 int isRegexMatch(char *regex, char *input);
 int runRegexTestCases(char *regex, char *testCases[]);
@@ -68,7 +56,7 @@ int main() {
 	char *filenameRegex_InCurrentDir = "^(\\.\\/|[^\\/])[a-zA-Z0-9\\s]+(\\.[a-zA-Z]{1,4})$";
 	char *filenameRegex_HasAcceptedExtension = "\\.(text|txt)$"; // White list of valid extensions, we need more ideas ...
 	char *filenameRegex_HasRelativePath = "\\.\\.";
-	char *passwordRegex = "^[0-9a-zA-Z]{12,56}$";
+	char *passwordRegex = "[^()+]";//"^(?=(.*[a-z].*))(?=(.*[A-Z].*))(?=.*\\d.*)(?=.*\\W.*)[a-zA-Z0-9\\S]{12,56}$";
 
 #ifdef TEST
 	// Regex test cases
@@ -104,7 +92,7 @@ int main() {
 	/**
 	 * 2) get 2 32 bit ints from user
 	 */
-	regexVerifier numberVerifiers[] = {{numberRegex, 1, "you must only enter digits which may be preceded with an \"+\" or \"-\""}, emptyVerifier};
+	regexVerifier numberVerifiers[] = {{numberRegex, 1, "you may enter up to ten digits which may optionally be precedded by \"+\" or \"-\""}, emptyVerifier};
 	long long integerA = getVerifiedInteger("Enter the first 32 bit integer: " ,intA, NUMBER_BUFF_LENGTH, numberVerifiers);
 	long long integerB = getVerifiedInteger("Enter the second 32 bit integer: ",intB, NUMBER_BUFF_LENGTH, numberVerifiers);
 	long long addResult  = integerA + integerB;
@@ -126,7 +114,7 @@ int main() {
 	/**
 	 * 4) get password from user
 	 */
-	regexVerifier passwordVerifiers[] = {{passwordRegex, 1, "You must enter between 12 and 56 characters all of which must be numbers or letters"}, emptyVerifier};
+	regexVerifier passwordVerifiers[] = {{passwordRegex, 1, "You must enter between 12 and 56 characters with at least one upper case, one lower chase, one digit, and one symbol"}, emptyVerifier};
 	doPasswordThing("Enter a password between 12 and 56 characters that only contains numbers and letters", passwordVerifiers);
 
 	fclose(inputFile);
@@ -157,7 +145,7 @@ int runRegexTestCases(char *regex, char *testCases[]) {
 	while ((thisTestCase = testCases[i++]) != 0) {
 		passCount += (havePass = isRegexMatch(regex, thisTestCase)) ? 1 : 0;
 #ifdef TEST
-		printf("%s|\"%s\"\n", (havePass) ? "     Yes    " : "     No     ", thisTestCase);
+		printf("%8s    |    %8s\n", (havePass) ? "YES" : "No", thisTestCase);
 #endif
 	}
 	return passCount;
@@ -169,7 +157,7 @@ int isRegexMatch(char *regex, char *input) {
 	char errorMessage[100];
 
 	regex_t regext;
-	int reti = regcomp(&regext, regex, REG_EXTENDED | REG_ENHANCED);
+	int reti = regcomp(&regext, regex, REG_EXTENDED);
 	if (reti) {
 		regerror(reti, &regext, errorMessage, sizeof(errorMessage));
 		fprintf(stderr, "%s\n", errorMessage);
@@ -199,7 +187,7 @@ void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, re
 		printf("\n%s\n>", prompt);
 		int readResult = readInput(inputBuffer, inputBufferSize);
 		if (readResult == READ_EXCEEDED_BUFFER) {
-			printf("\nYou must enter fewer then %d characters, try again:\n", inputBufferSize);
+			printf("\nYou must enter fewer than %d characters, try again:\n", inputBufferSize);
 			isValid = 0;
 		} else if (readResult == READ_ZERO_BYTES) {
 			printf("\nYou must enter something...\n");
@@ -396,7 +384,7 @@ void doPasswordThing(char* prompt, regexVerifier verifiers[]){
 		salt[i] = (char)((rand() % (UCHAR_MAX - 1)) +1);
 
 	// get the password from the user
-	getValidatedString(prompt,password, sizeof(password) + 8, verifiers);
+	getValidatedString(prompt,password, sizeof(password) - 8, verifiers);
 	int passwordLength = strlen((char*)password);
 
 	// Append the salt to the end of the string and fill the rest with '\0's
