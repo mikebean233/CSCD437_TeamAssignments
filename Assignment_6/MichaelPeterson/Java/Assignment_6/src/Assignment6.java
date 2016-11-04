@@ -1,11 +1,24 @@
-import java.io.InputStreamReader;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import java.io.*;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.FileOwnerAttributeView;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.security.SecureRandom;
 
 public class Assignment6 implements Runnable{
 
     private static String OS = System.getProperty("os.name").toLowerCase();
     private static final int STRING_INPUT_LENGTH = 50;
     private static final int INT_INPUT_LENGTH    = 11;
+    private static final int PWD_INPUT_LENGTH    = 64;
+
+    File logFile;
 
     public static void main(String[] args) {
         (new Assignment6()).run();
@@ -27,8 +40,15 @@ public class Assignment6 implements Runnable{
         }
 
         public Boolean validate(String input){
-            return shouldMatch == Pattern.compile(regex).matcher(input).matches();
+            Matcher matcher = Pattern.compile(regex).matcher(input);
+
+            return shouldMatch == matcher.matches();
         }
+    }
+
+    private enum FileType{
+        Input,
+        Output
     }
 
     private enum UserInputStatus{
@@ -49,38 +69,55 @@ public class Assignment6 implements Runnable{
 
     @Override
     public void run() {
-        //if (!(OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0)) {
-        //    System.err.println("This software is designed to be run on a Linux operating system.");
-        //    System.exit(1);
-        //}
+        if (!(OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0)) {
+            System.err.println("This software is designed to be run on a Linux operating system.");
+            System.exit(1);
+        }
 
         String firstName, lastName;
 
 
+        // Files
+        File inputFile, outputFile;
 
+        logFile = new File("error.log");
+        if(!logFile.exists()) {
+            try {
+                logFile.createNewFile();
+            }
+            catch(Exception e){
+                System.err.println(e.getMessage());
+                System.exit(1);
+            }
+        }
+
+        if(!logFile.canWrite()){
+            System.err.println("Unable to write to log file \"error.log\"");
+            System.exit(1);
+        }
 
         // regexes
         String nameRegex = "^[a-zA-Z]{1,}$";
         String numberRegex = "^(()|\\+|\\-)[0-9]{1,10}$";
         String filenameRegex_InCurrentDir = "^(\\.\\/|[^\\/])[a-zA-Z0-9\\s]+(\\.[a-zA-Z]{1,4})$";
-        String filenameRegex_HasAcceptedExtension = "\\.(text|txt)$"; // White list of valid extensions, we need more ideas ...
+        String filenameRegex_HasAcceptedExtension = "[^\\.]{1,}\\.(text|txt)$"; // White list of valid extensions, we need more ideas ...
         String filenameRegex_HasRelativePath = "\\.\\.";
-        String passwordRegex = "^[0-9a-zA-Z]{12,56}$";
+        String passwordRegex = "[a-z]*";//"^(?=(.*[a-z].*))(?=(.*[A-Z].*))(?=.*\\\\d.*)(?=.*\\\\W.*)[a-zA-Z0-9\\\\S]{12,56}$";
 
         /**
          * 1) get first and last name from user
          */
         RegexValidator nameVerifiers[] = {new RegexValidator(nameRegex, true, "You must enter only letters")};
-        firstName = getValidatedString("Enter your first name: ", STRING_INPUT_LENGTH, nameVerifiers);
-        lastName  = getValidatedString("Enter your last name: " , STRING_INPUT_LENGTH, nameVerifiers);
+        firstName = getValidString("Enter your first name: ", STRING_INPUT_LENGTH, nameVerifiers);
+        lastName  = getValidString("Enter your last name: " , STRING_INPUT_LENGTH, nameVerifiers);
 
 
         /**
          * 2) get 2 32 bit ints from user
          */
         RegexValidator numberVerifiers[] = {new RegexValidator(numberRegex, true, "you must only enter digits which may be preceded with an \"+\" or \"-\"")};
-        long integerA = getValidatedInteger("Enter the first 32 bit integer: ", INT_INPUT_LENGTH, numberVerifiers);
-        long integerB = getValidatedInteger("Enter the second 32 bit integer: ",INT_INPUT_LENGTH, numberVerifiers);
+        long integerA = getValidInteger("Enter the first 32 bit integer: ", INT_INPUT_LENGTH, numberVerifiers);
+        long integerB = getValidInteger("Enter the second 32 bit integer: ",INT_INPUT_LENGTH, numberVerifiers);
         long addResult  = integerA + integerB;
         long multResult = integerA * integerB;
 
@@ -92,24 +129,60 @@ public class Assignment6 implements Runnable{
             new RegexValidator(filenameRegex_HasRelativePath,      false, "you are not allowed to use relative paths"),
             new RegexValidator(filenameRegex_InCurrentDir,         true, "you may only specify files in the current directory"),
         };
-        //inputFile  = getValidFile("Enter an input file path from the current directory" , inFilename , IN_BUFF_LENGTH, filenameVerifiers, INPUT_FILE);
-        //outputFile = getValidFile("Enter an output file path from the current directory", outFilename, IN_BUFF_LENGTH, filenameVerifiers, OUTPUT_FILE);
-        //writeOutputFile(firstName, lastName, addResult, multResult, inputFile, outputFile, logFile);
+        inputFile = getValidFile("Enter an input file path from the current directory"  , STRING_INPUT_LENGTH, filenameValidators, FileType.Input);
+        outputFile = getValidFile("Enter an output file path from the current directory", STRING_INPUT_LENGTH, filenameValidators, FileType.Output);
+        writeOutputFile(firstName, lastName, addResult, multResult, inputFile, outputFile);
 
         /**
          * 4) get password from user
          */
-        RegexValidator passwordVerifiers[] = {new RegexValidator(passwordRegex, true, "You must enter between 12 and 56 characters all of which must be numbers or letters")};
-        //doPasswordThing("Enter a password between 12 and 56 characters that only contains numbers and letters", passwordVerifiers);
-
-        //fclose(inputFile);
-        //fclose(outputFile);
-        //fclose(logFile);
+        RegexValidator passwordVerifiers[] = {new RegexValidator(passwordRegex, true, "You must enter between 12 and 56 characters with at least one upper case, one lower chase, one digit, and one symbol")};
+        doPasswordThing("Enter a password between 12 and 56 characters that only contains numbers and letters", passwordVerifiers);
     }
 
+    private void doPasswordThing(String prompt, RegexValidator validators[]){
+        try {
+
+            boolean isValid = false;
+            byte[] salt = new byte[8];
+            // Generate salt
+            SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+            random.nextBytes(salt);
+
+            // Get the hash of the password
+            byte[] originalHash = SecretKeyFactory
+                    .getInstance("PBKDF2WithHmacSHA1")
+                    .generateSecret(new PBEKeySpec(getValidString(prompt, PWD_INPUT_LENGTH, validators).toCharArray(), salt, 65536, 128))
+                    .getEncoded();
 
 
-    private String getValidatedString(String prompt, int inputLength, RegexValidator validators[]){
+            while(!isValid){
+                String passwordGuess = getValidString(prompt, PWD_INPUT_LENGTH, validators);
+
+                // Get the hash of the guess
+                byte[] guessHash = SecretKeyFactory
+                        .getInstance("PBKDF2WithHmacSHA1")
+                        .generateSecret(new PBEKeySpec(passwordGuess.toCharArray(), salt, 65536, 128))
+                        .getEncoded();
+
+                if(Arrays.equals(originalHash, guessHash)){
+                    System.out.println("contratulations, you found the password!!");
+                    isValid = true;
+                }
+                else{
+                    System.out.println("- that was the wrong password");
+                    isValid = false;
+                }
+            }// End while
+        }// End try
+        catch(Exception e){
+            System.err.println();
+            logError(e.getMessage());
+            System.exit(1);
+        }
+    }// End doPasswordThing
+
+    private String getValidString(String prompt, int inputLength, RegexValidator validators[]){
         if(prompt == null || validators == null)
             throw new NullPointerException();
 
@@ -140,11 +213,11 @@ public class Assignment6 implements Runnable{
             }
         }// End while(!isValid)
         return thisInput.value;
-    }
+    }// End getValidString
 
     private UserInputResult getInput(int length){
         StringBuilder value = new StringBuilder();
-        //Scanner scanner = new Scanner(System.in);
+
         InputStreamReader reader = new InputStreamReader(System.in);
         int copyCount = 0;
         char thisChar = 0;
@@ -164,15 +237,15 @@ public class Assignment6 implements Runnable{
             System.exit(1);
         }
         return new UserInputResult(value.toString(), (exceededBuffer) ? UserInputStatus.TooLarge : (copyCount == 0) ? UserInputStatus.Empty : UserInputStatus.WithinLimits);
-    }
+    }// End getInput
 
-    long getValidatedInteger(String prompt, int length, RegexValidator validators[]){
+    long getValidInteger(String prompt, int length, RegexValidator validators[]){
         boolean isValid = false;
 
         long returnValue = 0;
 
         while(!isValid) {
-            String thisInput = getValidatedString(prompt, length, validators);
+            String thisInput = getValidString(prompt, length, validators);
             isValid = true;
             try {
                 returnValue = Long.parseLong(thisInput);
@@ -193,12 +266,101 @@ public class Assignment6 implements Runnable{
             }
         }// End while(!isValid)
         return returnValue;
-    }
+    }// getValidInteger
+
+    File getValidFile(String prompt, int length, RegexValidator validators[], FileType type){
+        File validFile = null;
+
+        boolean isValid = false;
+        while(!isValid){
+            String thisInput = getValidString(prompt, length,validators);
+
+            try {
+                Path thisPath = Paths.get(thisInput);
+                boolean exists = Files.exists(thisPath);
+
+                isValid = true;
+                if (type == FileType.Input) {
+                    if(!exists){
+                        System.out.println("- you must specify an input file that exists...");
+                        isValid = false;
+                    }
+                    else{
+                        BasicFileAttributeView attributes = Files.getFileAttributeView(thisPath, BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
+                        FileOwnerAttributeView ownerAttributes = Files.getFileAttributeView(thisPath, FileOwnerAttributeView.class, LinkOption.NOFOLLOW_LINKS);
 
 
+                        // Make sure we are dealing with a regular file
+                        if(!attributes.readAttributes().isRegularFile()){
+                            System.out.println("- You must specify a regular file (directories, character/block devices, named pipes, sockets, and symbolic links are not allowed)");
+                            isValid = false;
+                        }
+
+                        // Make sure the current user is actually the owner of the input file
+                        if(!ownerAttributes.getOwner().getName().equals(System.getProperty("user.name"))){
+                            System.out.println("- You must specify a file that you own");
+                            isValid = false;
+                        }
+
+                        // Make sure the current user has read privileges for the specified file
+                        validFile = thisPath.toFile();
+                        if(!validFile.canRead()){
+                            System.out.println("- You must specify a file that you have read privileges to");
+                            isValid = false;
+                        }
+                    }// End else
+                } else if (type == FileType.Output) {
+                    if(exists){
+                        System.out.println("- you must specify a file that doesn't exist already");
+                        isValid = false;
+                    }
+                    else{
+                        validFile = thisPath.toFile();
+                    }
+                }// End else if
+            }
+            catch(Exception e){
+                logError(e.getMessage());
+                System.err.println(e.getMessage());
+                System.exit(1);
+            }
+        }
+        return validFile;
+    }// EndgetValidFile
+
+    private void writeOutputFile(String firstName, String lastName, long addResult, long multResult, File inputFile, File outputFile){
+        String newLine = System.lineSeparator();
+        String header = firstName + newLine + lastName + newLine + addResult + newLine + multResult + newLine;
+
+        int thisChar = '\0';
+
+        try {
+            PrintStream printStream = new PrintStream(outputFile);
+            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+
+            printStream.print(header);
+
+            while((thisChar = reader.read()) != -1){
+                printStream.print((char)thisChar);
+            }
+            printStream.close();
+            reader.close();
+        }
+        catch(Exception e){
+            logError(e.getMessage());
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+    }// End writeOutputFile
 
     private void logError(String error){
-
+        try {
+            PrintStream printStream = new PrintStream(logFile);
+            printStream.println((new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date())) + " - " +  error);
+        }
+        catch(Exception e){
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
     }
-
 }
