@@ -45,40 +45,40 @@
 /* FF, GG, HH, and II transformations for rounds 1, 2, 3, and 4 */
 /* Rotation is separate from addition to prevent recomputation */
 #define FF(a, b, c, d, x, s, ac) \
-  {(a) += F ((b), (c), (d)) + (x) + (uint)(ac); \
+  {(a) += F ((b), (c), (d)) + (x) + (unsigned int)(ac); \
    (a) = ROTATE_LEFT ((a), (s)); \
    (a) += (b); \
   }
 #define GG(a, b, c, d, x, s, ac) \
-  {(a) += G ((b), (c), (d)) + (x) + (uint)(ac); \
+  {(a) += G ((b), (c), (d)) + (x) + (unsigned int)(ac); \
    (a) = ROTATE_LEFT ((a), (s)); \
    (a) += (b); \
   }
 #define HH(a, b, c, d, x, s, ac) \
-  {(a) += H ((b), (c), (d)) + (x) + (uint)(ac); \
+  {(a) += H ((b), (c), (d)) + (x) + (unsigned int)(ac); \
    (a) = ROTATE_LEFT ((a), (s)); \
    (a) += (b); \
   }
 #define II(a, b, c, d, x, s, ac) \
-  {(a) += I ((b), (c), (d)) + (x) + (uint)(ac); \
+  {(a) += I ((b), (c), (d)) + (x) + (unsigned int)(ac); \
    (a) = ROTATE_LEFT ((a), (s)); \
    (a) += (b); \
   }
 
-void md5_vfy(unsigned char* data, uint length, uint *a1, uint *b1, uint *c1, uint *d1)
+void md5_vfy(unsigned char* data, unsigned int length, unsigned int *a1, unsigned int *b1, unsigned int *c1, unsigned int *d1)
 {
 
-	const uint a0 = 0x67452301;
-	const uint b0 = 0xEFCDAB89;
-	const uint c0 = 0x98BADCFE;
-	const uint d0 = 0x10325476;
+	const unsigned int a0 = 0x67452301;
+	const unsigned int b0 = 0xEFCDAB89;
+	const unsigned int c0 = 0x98BADCFE;
+	const unsigned int d0 = 0x10325476;
 
-	uint a = 0;
-    uint b = 0;
-    uint c = 0;
-    uint d = 0;
+	unsigned int a = 0;
+    unsigned int b = 0;
+    unsigned int c = 0;
+    unsigned int d = 0;
 
-uint vals[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+unsigned int vals[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 int i = 0;
 
@@ -88,7 +88,7 @@ for(i=0; i < length; i++)
 }
 vals[i / 4] |= 0x80 << ((i % 4) * 8);
 
-uint bitlen = length * 8;
+unsigned int bitlen = length * 8;
 
 #define in0  (vals[0])//x
 #define in1  (vals[1])//y
@@ -213,32 +213,32 @@ uint bitlen = length * 8;
     *d1 = d;
 }
 
-uint unhex(unsigned char x)
+unsigned int unhex(unsigned char x)
 {
     if(x <= 'F' && x >= 'A')
     {
-        return  (uint)(x - 'A' + 10);
+        return  (unsigned int)(x - 'A' + 10);
     }
     else if(x <= 'f' && x >= 'a')
     {
-        return (uint)(x - 'a' + 10);
+        return (unsigned int)(x - 'a' + 10);
     }
     else if(x <= '9' && x >= '0')
     {
-        return (uint)(x - '0');
+        return (unsigned int)(x - '0');
     }
     return 0;
 }
 
-void md5_to_ints(unsigned char* md5, uint *r0, uint *r1, uint *r2, uint *r3)
+void md5_to_ints(unsigned char* md5, unsigned int *r0, unsigned int *r1, unsigned int *r2, unsigned int *r3)
 {
-    uint v0 = 0, v1 = 0, v2 = 0, v3 = 0;
+    unsigned int v0 = 0, v1 = 0, v2 = 0, v3 = 0;
     int i = 0;
     for(i = 0; i < 32; i+=2)
     {
-        uint first = unhex(md5[i]);
-        uint second = unhex(md5[i+1]);
-        uint both = first * 16 + second;
+        unsigned int first = unhex(md5[i]);
+        unsigned int second = unhex(md5[i+1]);
+        unsigned int both = first * 16 + second;
         both = both << 24;
         if(i < 8)
         {
