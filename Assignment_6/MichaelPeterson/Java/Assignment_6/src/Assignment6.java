@@ -17,6 +17,7 @@ public class Assignment6 implements Runnable{
     private static final int STRING_INPUT_LENGTH = 50;
     private static final int INT_INPUT_LENGTH    = 11;
     private static final int PWD_INPUT_LENGTH    = 64;
+    private static boolean TEST                  = true;
 
     File logFile;
 
@@ -69,10 +70,10 @@ public class Assignment6 implements Runnable{
 
     @Override
     public void run() {
-        if (!(OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0)) {
-            System.err.println("This software is designed to be run on a Linux operating system.");
-            System.exit(1);
-        }
+       // if (!(OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0)) {
+       //     System.err.println("This software is designed to be run on a Linux operating system.");
+       //     System.exit(1);
+       // }
 
         String firstName, lastName;
 
@@ -96,6 +97,8 @@ public class Assignment6 implements Runnable{
             System.exit(1);
         }
 
+
+
         // regexes
         String nameRegex = "^[a-zA-Z]{1,}$";
         String numberRegex = "^(()|\\+|\\-)[0-9]{1,10}$";
@@ -103,6 +106,22 @@ public class Assignment6 implements Runnable{
         String filenameRegex_HasAcceptedExtension = "[^\\.]{1,}\\.(text|txt)$"; // White list of valid extensions, we need more ideas ...
         String filenameRegex_HasRelativePath = "\\.\\.";
         String passwordRegex = "[a-z]*";//"^(?=(.*[a-z].*))(?=(.*[A-Z].*))(?=.*\\\\d.*)(?=.*\\\\W.*)[a-zA-Z0-9\\\\S]{12,56}$";
+
+
+        if(TEST){
+            String nameTestCases[]     = {"", "\0", "\n", "Jhon", " Jhon", "1ll124lk1 1 4l ", "bob", "a", "13", "bob "};
+            String numberTestCases[]   = {"", "\0", "\n", "0", " 0", "0 ", " 0 ", "-0", "+0", "123", "-123", "+123", "- 123", "123-", "+0123546789", "+01235467891", " ", "apple"};
+            String filenameTestCases[] = {"", "\0", "\n", "file.dog", "file.Txt", "file.txt", "./file/../.txt", "/file.txt", "./file.txt", "../file.txt", "/../file.txt", "./ /"};
+            String passwordTestCases[] = {"", "\0", "\n", "abcde", "Slg3k4k23j4Dkj4k23j4kn234jh", ";2l23k23l SFLk#lk429' saf\nsf3 "};
+
+            runRegexTestCases(nameRegex                         , nameTestCases);
+            runRegexTestCases(numberRegex                       , numberTestCases);
+            runRegexTestCases(filenameRegex_InCurrentDir        , filenameTestCases);
+            runRegexTestCases(filenameRegex_HasAcceptedExtension, filenameTestCases);
+            runRegexTestCases(filenameRegex_HasRelativePath     , filenameTestCases);
+            runRegexTestCases(passwordRegex                     , passwordTestCases);
+        }
+
 
         /**
          * 1) get first and last name from user
@@ -362,5 +381,19 @@ public class Assignment6 implements Runnable{
             System.err.println(e.getMessage());
             System.exit(1);
         }
+    }
+
+    private void runRegexTestCases(String regex, String inputs[]){
+        System.out.println("---- Test Cases for Regex: " + regex + "---------");
+        System.out.println("  Is Match  |  Input  ");
+        System.out.println("----------------------");
+
+        RegexValidator thisValidator = new RegexValidator(regex, true, "");
+
+        for(String thisInput: inputs){
+            System.out.printf("%12s|%12s",(thisValidator.validate(thisInput) ? "YES" : "NO"), "\"" + thisInput + "\"");
+            System.out.println();
+        }
+        System.out.println();
     }
 }
