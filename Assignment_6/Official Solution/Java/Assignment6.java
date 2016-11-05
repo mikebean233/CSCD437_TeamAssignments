@@ -31,7 +31,7 @@ public class Assignment6 implements Runnable{
     private static final int STRING_INPUT_LENGTH = 50;
     private static final int INT_INPUT_LENGTH    = 11;
     private static final int PWD_INPUT_LENGTH    = 56;
-    private static boolean TEST                  = true;
+    private static boolean TEST                  = false;
 
     File logFile;
 

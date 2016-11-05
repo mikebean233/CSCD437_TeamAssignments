@@ -1,0 +1,264 @@
+Michaels-MacBook-Pro-2:Java michael$ make clean
+rm -f *.class
+Michaels-MacBook-Pro-2:Java michael$ make
+javac Assignment6.java
+Michaels-MacBook-Pro-2:Java michael$ make run
+java Assignment6
+---- Test Cases for Regex: ^[a-zA-Z]{1,}$---------
+  Is Match  |  Input  
+----------------------
+          NO|          ""
+          NO|         ""
+          NO|         "
+"
+         YES|      "Jhon"
+          NO|     " Jhon"
+          NO|"1ll124lk1 1 4l "
+         YES|       "bob"
+         YES|         "a"
+          NO|        "13"
+          NO|      "bob "
+          NO|         "0"
+          NO|        ".."
+          NO|     "Jo hn"
+
+---- Test Cases for Regex: ^(()|\+|\-)[0-9]{1,10}$---------
+  Is Match  |  Input  
+----------------------
+          NO|          ""
+          NO|         ""
+          NO|         "
+"
+         YES|         "0"
+          NO|        " 0"
+          NO|        "0 "
+          NO|       " 0 "
+         YES|        "-0"
+         YES|        "+0"
+         YES|       "123"
+         YES|      "-123"
+         YES|      "+123"
+          NO|     "- 123"
+          NO|      "123-"
+         YES|"+0123546789"
+          NO|"+01235467891"
+          NO|         " "
+          NO|     "apple"
+          NO|       "abc"
+          NO|"-12345678901"
+          NO|"--12345678"
+          NO|"-+34567890"
+          NO|"- 34567890"
+          NO|"123456789-"
+          NO|"123456789 +"
+          NO|"123456789++"
+          NO|"-123456789-"
+          NO| "(123*456)"
+         YES|"0000000000"
+         YES|"-0000000000"
+          NO|"*1234567890"
+          NO|"1-23456789"
+          NO|        "--"
+          NO|       "--0"
+          NO|"0000000000000001"
+
+---- Test Cases for Regex: ^(\.\/|[^\/])[a-zA-Z0-9\s]+(\.[a-zA-Z]{1,4})$---------
+  Is Match  |  Input  
+----------------------
+          NO|          ""
+          NO|         ""
+          NO|         "
+"
+         YES|  "file.dog"
+         YES|  "file.Txt"
+         YES|  "file.txt"
+          NO|"./file/../.txt"
+          NO| "/file.txt"
+         YES|"./file.txt"
+          NO|"../file.txt"
+          NO|"/../file.txt"
+          NO|      "./ /"
+          NO|"\/bin\/file.txt"
+          NO|     "*.txt"
+          NO|    "file.*"
+
+---- Test Cases for Regex: [^\.]{1,}\.(text|txt)$---------
+  Is Match  |  Input  
+----------------------
+          NO|          ""
+          NO|         ""
+          NO|         "
+"
+          NO|  "file.dog"
+          NO|  "file.Txt"
+         YES|  "file.txt"
+          NO|"./file/../.txt"
+         YES| "/file.txt"
+          NO|"./file.txt"
+          NO|"../file.txt"
+          NO|"/../file.txt"
+          NO|      "./ /"
+         YES|"\/bin\/file.txt"
+         YES|     "*.txt"
+          NO|    "file.*"
+
+---- Test Cases for Regex: \.\.---------
+  Is Match  |  Input  
+----------------------
+          NO|          ""
+          NO|         ""
+          NO|         "
+"
+          NO|  "file.dog"
+          NO|  "file.Txt"
+          NO|  "file.txt"
+          NO|"./file/../.txt"
+          NO| "/file.txt"
+          NO|"./file.txt"
+          NO|"../file.txt"
+          NO|"/../file.txt"
+          NO|      "./ /"
+          NO|"\/bin\/file.txt"
+          NO|     "*.txt"
+          NO|    "file.*"
+
+---- Test Cases for Regex: ^(?=(.*[a-z].*))(?=(.*[A-Z].*))(?=.*\d.*)(?=.*\W.*)[a-zA-Z0-9\S]{12,56}$---------
+  Is Match  |  Input  
+----------------------
+          NO|          ""
+          NO|         ""
+          NO|         "
+"
+          NO|     "abcde"
+          NO|"Slg3k4k23j4Dkj4k23j4kn234jh"
+         YES|"2l23k23ISFLk#lk429safnsf3"
+          NO|"2l23k23lSFLk#lk429saf
+sf3"
+          NO|";2l23k23l SFLk#lk429'saf
+sf3 "
+         YES|"abcDEF123@#$abc"
+         YES|"!@12asAS90123456fifty-one-charachers789012345678901"
+         YES|"abCD$%789012345fifty-characters2345678901234567890"
+
+Enter your first name: 
+>
+
+- You must enter something.
+Enter your first name: 
+>
+ 
+- You must enter only letters
+Enter your first name: 
+>
+?
+- You must enter only letters
+Enter your first name: 
+>
+llllllllllllllllllllllllllllllleeeeeeeeeeeeeeeeeeeeeeeeeeeeeeettttttttttttttttttteeeeeeeeeeeeeeeeeeeeeerrrrrrrrrrrrrrrrrrrrrrrrrsssssssssssssssssssssss
+- You must enter fewer than 51 characters
+Enter your first name: 
+>
+Fine
+Enter your last name: 
+>
+La$t Name
+- You must enter only letters
+Enter your last name: 
+>
+Last Name
+- You must enter only letters
+Enter your last name: 
+>
+Fine
+Enter the first 32 bit integer: 
+>
+32 bit integer
+- You must enter fewer than 12 characters
+Enter the first 32 bit integer: 
+>
+twelve
+- You must only enter a maximum of ten digits, which may be preceded with an "+" or "-"
+Enter the first 32 bit integer: 
+>
+-a
+- You must only enter a maximum of ten digits, which may be preceded with an "+" or "-"
+Enter the first 32 bit integer: 
+>
+2147483649
+- The provided value exceeds the maximum value for a 32 bit signed integer
+Enter the first 32 bit integer: 
+>
+2147483647
+Enter the second 32 bit integer: 
+>
+-2147483648
+Enter an input file path from the current directory
+>
+input file dot text
+- Only files with the extensions .txt and .text are allowed
+- You may only specify files in the current directory
+Enter an input file path from the current directory
+>
+/usr/sytem/bin/bash
+- Only files with the extensions .txt and .text are allowed
+- You may only specify files in the current directory
+Enter an input file path from the current directory
+>
+/../file
+- Only files with the extensions .txt and .text are allowed
+- You may only specify files in the current directory
+Enter an input file path from the current directory
+>
+./file.txt
+- Only files with the extensions .txt and .text are allowed
+Enter an input file path from the current directory
+>
+input.txt
+- You must specify an input file that exists.
+Enter an input file path from the current directory
+>
+input.txt
+Enter an output file path from the current directory
+>
+input.txt
+- You must specify a file that doesn't exist already
+Enter an output file path from the current directory
+>
+Assignment6.class
+- Only files with the extensions .txt and .text are allowed
+- You may only specify files in the current directory
+Enter an output file path from the current directory
+>
+output.txt
+Enter a password between 12 and 56 characters that contains one lower-case letter, one upper-case letter, one numerical digit, and one symbol.
+>
+no
+- Criteria not met.
+Enter a password between 12 and 56 characters that contains one lower-case letter, one upper-case letter, one numerical digit, and one symbol.
+>
+999999999999999999999999999999999999999
+- Criteria not met.
+Enter a password between 12 and 56 characters that contains one lower-case letter, one upper-case letter, one numerical digit, and one symbol.
+>
+Happy Panda 5?
+- Criteria not met.
+Enter a password between 12 and 56 characters that contains one lower-case letter, one upper-case letter, one numerical digit, and one symbol.
+>
+Happy Panda 5!
+- Criteria not met.
+Enter a password between 12 and 56 characters that contains one lower-case letter, one upper-case letter, one numerical digit, and one symbol.
+>
+HappyPanda.1
+Re-enter your password
+>
+no
+- Criteria not met.
+Re-enter your password
+>
+SadPanda.1
+- Criteria not met.
+Re-enter your password
+>
+HappyPanda.1
+Congratulations, you matched your own password!
+Michaels-MacBook-Pro-2:Java michael$ 

@@ -1,0 +1,320 @@
+Michaels-MacBook-Pro-2:C michael$ echo "this is a test file" > input.txt
+Michaels-MacBook-Pro-2:C michael$ make clean
+rm -f assignment6 assignment6_test md5.o
+Michaels-MacBook-Pro-2:C michael$ make
+gcc md5.c -c -o md5.o
+gcc assignment6.c md5.o -o assignment6 -pedantic -Wall -Wextra -Werror -std=c99
+Michaels-MacBook-Pro-2:C michael$ make test
+gcc assignment6.c md5.o -o assignment6_test -pedantic -Wall -Wextra -Werror -D TEST -std=c99
+Michaels-MacBook-Pro-2:C michael$ make run_test
+./assignment6_test
+
+
+---- Test Cases for Regex: "^[a-zA-Z]{1,}$" --------
+  Is Match  |  Input  
+----------------------
+      No    |    ""
+      No    |    ""
+      No    |    "
+"
+     YES    |    "Jhon"
+      No    |    " Jhon"
+      No    |    "1ll124lk1 1 4l "
+     YES    |    "bob"
+     YES    |    "a"
+      No    |    "13"
+      No    |    "bob "
+      No    |    "0"
+      No    |    ".."
+      No    |    "Jo hn"
+
+
+---- Test Cases for Regex: "^(()|\+|\-)[0-9]{1,10}$" --------
+  Is Match  |  Input  
+----------------------
+      No    |    ""
+      No    |    ""
+      No    |    "
+"
+     YES    |    "0"
+      No    |    " 0"
+      No    |    "0 "
+      No    |    " 0 "
+     YES    |    "-0"
+     YES    |    "+0"
+     YES    |    "123"
+     YES    |    "-123"
+     YES    |    "+123"
+      No    |    "- 123"
+      No    |    "123-"
+     YES    |    "+0123546789"
+      No    |    "+01235467891"
+      No    |    " "
+      No    |    "apple"
+      No    |    "abc"
+      No    |    "-12345678901"
+      No    |    "--12345678"
+      No    |    "-+34567890"
+      No    |    "- 34567890"
+      No    |    "123456789-"
+      No    |    "123456789 +"
+      No    |    "123456789++"
+      No    |    "-123456789-"
+      No    |    "(123*456)"
+     YES    |    "0000000000"
+     YES    |    "-0000000000"
+      No    |    "*1234567890"
+      No    |    "1-23456789"
+      No    |    "--"
+      No    |    "--0"
+      No    |    "0000000000000001"
+
+
+---- Test Cases for Regex: "^(\.\/|[^\/])[a-zA-Z0-9\s]+(\.[a-zA-Z]{1,4})$" --------
+  Is Match  |  Input  
+----------------------
+      No    |    ""
+      No    |    ""
+      No    |    "
+"
+     YES    |    "file.dog"
+     YES    |    "file.Txt"
+     YES    |    "file.txt"
+      No    |    "./file/../.txt"
+      No    |    "/file.txt"
+     YES    |    "./file.txt"
+      No    |    "../file.txt"
+      No    |    "/../file.txt"
+      No    |    "./ /"
+      No    |    "\/bin\/file.txt"
+      No    |    "*.txt"
+      No    |    "file.*"
+
+
+---- Test Cases for Regex: "\.(text|txt)$" --------
+  Is Match  |  Input  
+----------------------
+      No    |    ""
+      No    |    ""
+      No    |    "
+"
+      No    |    "file.dog"
+      No    |    "file.Txt"
+     YES    |    "file.txt"
+     YES    |    "./file/../.txt"
+     YES    |    "/file.txt"
+     YES    |    "./file.txt"
+     YES    |    "../file.txt"
+     YES    |    "/../file.txt"
+      No    |    "./ /"
+     YES    |    "\/bin\/file.txt"
+     YES    |    "*.txt"
+      No    |    "file.*"
+
+
+---- Test Cases for Regex: "\.\." --------
+  Is Match  |  Input  
+----------------------
+      No    |    ""
+      No    |    ""
+      No    |    "
+"
+      No    |    "file.dog"
+      No    |    "file.Txt"
+      No    |    "file.txt"
+     YES    |    "./file/../.txt"
+      No    |    "/file.txt"
+      No    |    "./file.txt"
+     YES    |    "../file.txt"
+     YES    |    "/../file.txt"
+      No    |    "./ /"
+      No    |    "\/bin\/file.txt"
+      No    |    "*.txt"
+      No    |    "file.*"
+
+
+---- Test Cases for Regex: "[a-z]+" --------
+  Is Match  |  Input  
+----------------------
+      No    |    ""
+      No    |    ""
+      No    |    "
+"
+     YES    |    "abcde"
+     YES    |    "Hello there.8"
+     YES    |    "Slg3k4k23j4Dkj4k23j4kn234jh"
+     YES    |    ";2l23k23l SFLk#lk429' saf
+sf3 "
+     YES    |    "abcDEF123@#$abc"
+     YES    |    "!@12asAS90123456fifty-one-charachers789012345678901"
+     YES    |    "abCD$%789012345fifty-characters2345678901234567890"
+
+
+---- Test Cases for Regex: "[A-Z]+" --------
+  Is Match  |  Input  
+----------------------
+      No    |    ""
+      No    |    ""
+      No    |    "
+"
+      No    |    "abcde"
+     YES    |    "Hello there.8"
+     YES    |    "Slg3k4k23j4Dkj4k23j4kn234jh"
+     YES    |    ";2l23k23l SFLk#lk429' saf
+sf3 "
+     YES    |    "abcDEF123@#$abc"
+     YES    |    "!@12asAS90123456fifty-one-charachers789012345678901"
+     YES    |    "abCD$%789012345fifty-characters2345678901234567890"
+
+
+---- Test Cases for Regex: "[0-9]+" --------
+  Is Match  |  Input  
+----------------------
+      No    |    ""
+      No    |    ""
+      No    |    "
+"
+      No    |    "abcde"
+     YES    |    "Hello there.8"
+     YES    |    "Slg3k4k23j4Dkj4k23j4kn234jh"
+     YES    |    ";2l23k23l SFLk#lk429' saf
+sf3 "
+     YES    |    "abcDEF123@#$abc"
+     YES    |    "!@12asAS90123456fifty-one-charachers789012345678901"
+     YES    |    "abCD$%789012345fifty-characters2345678901234567890"
+
+
+---- Test Cases for Regex: "[`~!@#$%^&*()_+=;\.]+" --------
+  Is Match  |  Input  
+----------------------
+      No    |    ""
+      No    |    ""
+      No    |    "
+"
+      No    |    "abcde"
+     YES    |    "Hello there.8"
+      No    |    "Slg3k4k23j4Dkj4k23j4kn234jh"
+     YES    |    ";2l23k23l SFLk#lk429' saf
+sf3 "
+     YES    |    "abcDEF123@#$abc"
+     YES    |    "!@12asAS90123456fifty-one-charachers789012345678901"
+     YES    |    "abCD$%789012345fifty-characters2345678901234567890"
+
+Enter your first name: 
+>
+
+You must enter something...
+
+Enter your first name: 
+>203948
+
+- You must enter only letters
+
+Enter your first name: 
+>alskfjslflafkalsfkashflkjhasflkjhasflkjahsflkjsahdfkjsahdfkljahslkfjhasdklfjhwlrjkhek4j3hkjhwerqr''wrwerwe
+
+You must enter 50 or fewer characters. Try again:
+
+Enter your first name: 
+>
+
+You must enter something...
+
+Enter your first name: 
+>Jhon
+
+Enter your last name: 
+>Dough
+
+Enter the first 32 bit integer: 
+>- 23452352352352352352352342334
+
+You must enter 11 or fewer characters. Try again:
+
+Enter the first 32 bit integer: 
+>- apple 456
+
+- you may enter up to ten digits which may optionally be precedded by "+" or "-"
+
+Enter the first 32 bit integer: 
+>-0
+
+Enter the second 32 bit integer: 
+>2147483648
+
+- The provided value exceeds the maximum value for a 32 bit signed integer
+Enter the second 32 bit integer: 
+>-2147483649                       
+
+- The provided value is less then the minimum value for a 32 but signed integer
+Enter the second 32 bit integer: 
+>2147483647
+
+Enter an input file path from the current directory
+>assignment6_test
+
+- only files with the extensions .txt and .text are allowed
+
+- you may only specify files in the current directory
+
+Enter an input file path from the current directory
+>../file.txt
+
+- you are not allowed to use relative paths
+
+- you may only specify files in the current directory
+
+Enter an input file path from the current directory
+>./file.txt
+
+- No such file or directory
+
+Enter an input file path from the current directory
+>intput.txt
+
+- No such file or directory
+
+Enter an input file path from the current directory
+>input.txt
+
+Enter an output file path from the current directory
+>assignment_test
+
+- only files with the extensions .txt and .text are allowed
+
+- you may only specify files in the current directory
+
+Enter an output file path from the current directory
+>output.txt
+
+Enter a password of 12-56 characters, with at least one capital, one lower case, one digit, and one special ( `~!@#$%^&*()_+= ) symbol: 
+>applepanda5
+
+- You must enter at least one upper case letter
+
+- You must enter at least on punctuation character
+
+Enter a password of 12-56 characters, with at least one capital, one lower case, one digit, and one special ( `~!@#$%^&*()_+= ) symbol: 
+>Applepanda5
+
+- You must enter at least on punctuation character
+
+Enter a password of 12-56 characters, with at least one capital, one lower case, one digit, and one special ( `~!@#$%^&*()_+= ) symbol: 
+>Apple Panda 5!
+
+Enter your password guess
+>Orange Panda 5
+
+- You must enter at least on punctuation character
+
+Enter your password guess
+>Orange Panda 6?
+
+- You must enter at least on punctuation character
+
+Enter your password guess
+>Apple Panda 5!
+
+congratulations, you found the password!!
+
+Michaels-MacBook-Pro-2:C michael$ 
