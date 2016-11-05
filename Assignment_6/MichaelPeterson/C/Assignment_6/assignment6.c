@@ -57,10 +57,10 @@ int main() {
 	char *filenameRegex_HasAcceptedExtension = "\\.(text|txt)$"; // White list of valid extensions, we need more ideas ...
 	char *filenameRegex_HasRelativePath = "\\.\\.";
 	//char *passwordRegex = "^[a-zA-Z0-9\\S]{12,56}$";
-	char *passwordRegex1 = "[a-z]+";
-	char *passwordRegex2 = "[A-Z]+";
-	char *passwordRegex3 = "[0-9]+";
-	char *passwordRegex4 = "[`~!@#$%^&*()_\\-+=\\|\\]\\}\\[\\{\"\'\\;\\:\\?\\.\\>\\,\\<]+";
+	char *passwordRegex_hasLowerCase = "[a-z]+";
+	char *passwordRegex_hasUpperCase = "[A-Z]+";
+	char *passwordRegex_hasDigit     = "[0-9]+";
+	char *passwordRegex_hasPunct     = "[`~!@#$%^&*()_+=;]+";
 
 
 
@@ -76,10 +76,10 @@ int main() {
 	runRegexTestCases(filenameRegex_InCurrentDir        , filenameTestCases);
 	runRegexTestCases(filenameRegex_HasAcceptedExtension, filenameTestCases);
 	runRegexTestCases(filenameRegex_HasRelativePath     , filenameTestCases);
-	runRegexTestCases(passwordRegex1                     , passwordTestCases);
-	runRegexTestCases(passwordRegex2                     , passwordTestCases);
-	runRegexTestCases(passwordRegex3                     , passwordTestCases);
-	runRegexTestCases(passwordRegex4                     , passwordTestCases);
+	runRegexTestCases(passwordRegex_hasLowerCase        , passwordTestCases);
+	runRegexTestCases(passwordRegex_hasUpperCase        , passwordTestCases);
+	runRegexTestCases(passwordRegex_hasDigit            , passwordTestCases);
+	runRegexTestCases(passwordRegex_hasPunct            , passwordTestCases);
 
 #endif
 
@@ -124,7 +124,13 @@ int main() {
 	/**
 	 * 4) get password from user
 	 */
-	regexVerifier passwordVerifiers[] = {{passwordRegex1, 1, "You must enter between 12 and 56 characters with at least one upper case, one lower chase, one digit, and one symbol"}, {passwordRegex2, 1, "You must enter between 12 and 56 characters with at least one upper case, one lower chase, one digit, and one symbol"}, {passwordRegex3, 1, "You must enter between 12 and 56 characters with at least one upper case, one lower chase, one digit, and one symbol"}, {passwordRegex4, 1, "You must enter between 12 and 56 characters with at least one upper case, one lower chase, one digit, and one symbol"}, emptyVerifier};
+	regexVerifier passwordVerifiers[] = {
+			{passwordRegex_hasLowerCase, 1, "You must enter at least one lower case letter."},
+			{passwordRegex_hasUpperCase, 1, "You must enter at least one upper case letter"},
+			{passwordRegex_hasDigit,     1, "You must enter a digit"},
+			{passwordRegex_hasPunct,     1, "You must enter at least on punctuation character"},
+			emptyVerifier
+	};
 
 	doPasswordThing("Enter a password between 12 and 56 characters that only contains numbers and letters", passwordVerifiers);
 
