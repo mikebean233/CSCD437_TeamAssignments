@@ -86,7 +86,7 @@ for(i=0; i < length; i++, k = i % sizeof(vals))
 {
     vals[k / 4] |= data[k] << ((k % 4) * 8);
 }
-vals[i / 4] |= 0x80 << ((i % 4) * 8);
+vals[k / 4] |= 0x80 << ((k % 4) * 8);
 
 unsigned int bitlen = length * 8;
 
