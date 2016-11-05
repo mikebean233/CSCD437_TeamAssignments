@@ -118,10 +118,7 @@ public class Assignment6 implements Runnable{
             runRegexTestCases(filenameRegex_HasAcceptedExtension, filenameTestCases);
             runRegexTestCases(filenameRegex_HasRelativePath     , filenameTestCases);
             runRegexTestCases(passwordRegex                    , passwordTestCases);
-	    // runRegexTestCases(passwordRegex_hasUpperCase                    , passwordTestCases);
-	    // runRegexTestCases(passwordRegex_hasDigit                     , passwordTestCases);
-	    // runRegexTestCases(passwordRegex_hasPunct                     , passwordTestCases);
-        }
+	    }
 
 
         /**
