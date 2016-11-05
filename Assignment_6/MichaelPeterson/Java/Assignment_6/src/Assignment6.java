@@ -382,7 +382,7 @@ public class Assignment6 implements Runnable{
     private void logError(String error){
         try {
             PrintStream printStream = new PrintStream(logFile);
-            printStream.println((new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date())) + " - " +  error);
+            printStream.println((new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())) + " - " +  error);
         }
         catch(Exception e){
             System.err.println(e.getMessage());
