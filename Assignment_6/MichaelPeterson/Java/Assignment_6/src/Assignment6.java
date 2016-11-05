@@ -14,12 +14,14 @@ import java.security.SecureRandom;
 public class Assignment6 implements Runnable{
 
     private static String OS = System.getProperty("os.name").toLowerCase();
+    private static String userName = System.getProperty("user.name").toLowerCase();
     private static final int STRING_INPUT_LENGTH = 50;
     private static final int INT_INPUT_LENGTH    = 11;
     private static final int PWD_INPUT_LENGTH    = 56;
-    private static boolean TEST                  = true;
+    private static boolean TEST                  = false;
 
     File logFile;
+
 
     public static void main(String[] args) {
         (new Assignment6()).run();
@@ -70,13 +72,18 @@ public class Assignment6 implements Runnable{
 
     @Override
     public void run() {
-       // if (!(OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0)) {
-       //     System.err.println("This software is designed to be run on a Linux operating system.");
-       //     System.exit(1);
-       // }
+        // First things first, make sure this isn't being ran as root
+        if("root".equals(userName)){
+            System.err.println("This program must not be run as the root user!");
+            System.exit(1);
+        }
+
+        if (!(OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0)) {
+            System.err.println("This software is designed to be run on a Linux operating system.");
+            System.exit(1);
+        }
 
         String firstName, lastName;
-
 
         // Files
         File inputFile, outputFile;
@@ -153,10 +160,10 @@ public class Assignment6 implements Runnable{
         /**
          * 4) get password from user
          */
-	 RegexValidator passwordVerifiers[] = {new RegexValidator(passwordRegex, true, "Criteria not met.")};
-	
-        doPasswordThing("Enter a password between 12 and 56 characters that contains one lower-case letter, one upper-case letter, one numerical digit, and one symbol.", passwordVerifiers);
-    }
+        RegexValidator passwordVerifiers[] = {new RegexValidator(passwordRegex, true, "Criteria not met.")};
+	    doPasswordThing("Enter a password between 12 and 56 characters that contains one lower-case letter, one upper-case letter, one numerical digit, and one symbol.", passwordVerifiers);
+
+    }// End run()
 
     private void doPasswordThing(String prompt, RegexValidator validators[]){
         try {
@@ -184,7 +191,7 @@ public class Assignment6 implements Runnable{
                         .getEncoded();
 
                 if(Arrays.equals(originalHash, guessHash)){
-                    System.out.println("Cogratulations, you matched your own password!");
+                    System.out.println("Congratulations, you matched your own password!");
                     isValid = true;
                 }
                 else{
@@ -215,7 +222,7 @@ public class Assignment6 implements Runnable{
             thisInput = getInput(inputLength);
 
             if(thisInput.status == UserInputStatus.TooLarge){
-                System.out.println("- You must enter fewer than " + (inputLength - 1) + " characters");
+                System.out.println("- You must enter fewer than " + (inputLength + 1) + " characters");
                 isValid = false;
             }
             else if(thisInput.status == UserInputStatus.Empty){
@@ -310,12 +317,12 @@ public class Assignment6 implements Runnable{
 
                         // Make sure we are dealing with a regular file
                         if(!attributes.readAttributes().isRegularFile()){
-                            System.out.println("- You must specify a regular file (directories, character/block devices, named pipes, sockets, and symbolic links are not allowed.)");
+                            System.out.println("- You must specify a regular file (directories, character/block devices, named pipes, sockets, and symbolic links are not allowed)");
                             isValid = false;
                         }
 
                         // Make sure the current user is actually the owner of the input file
-                        if(!ownerAttributes.getOwner().getName().equals(System.getProperty("user.name"))){
+                        if(!ownerAttributes.getOwner().getName().equals(userName)){
                             System.out.println("- You must specify a file that you own");
                             isValid = false;
                         }
@@ -342,9 +349,10 @@ public class Assignment6 implements Runnable{
                 System.err.println(e.getMessage());
                 System.exit(1);
             }
-        }
+        }// End while(!isValid)
         return validFile;
-    }// EndgetValidFile
+
+    }// End getValidFile
 
     private void writeOutputFile(String firstName, String lastName, long addResult, long multResult, File inputFile, File outputFile){
         String newLine = System.lineSeparator();
