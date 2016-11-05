@@ -240,6 +240,7 @@ public class Assignment6 implements Runnable{
             }
             else if(thisInput.status == UserInputStatus.Empty){
                 System.out.println("- You must enter something.");
+                isValid = false;
             }
             else {
                 for (RegexValidator thisValidator : validators){
