@@ -358,16 +358,15 @@ public class Assignment6 implements Runnable{
         String newLine = System.lineSeparator();
         String header = firstName + newLine + lastName + newLine + addResult + newLine + multResult + newLine;
 
-        int thisChar = '\0';
+        byte[] thisByte = new byte[1];
 
         try {
             PrintStream printStream = new PrintStream(outputFile);
-            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-
+            BufferedInputStream reader = new BufferedInputStream(new FileInputStream(inputFile));
             printStream.print(header);
 
-            while((thisChar = reader.read()) != -1){
-                printStream.print((char)thisChar);
+            while(reader.read(thisByte) > 0){
+                printStream.write(thisByte);
             }
             printStream.close();
             reader.close();
