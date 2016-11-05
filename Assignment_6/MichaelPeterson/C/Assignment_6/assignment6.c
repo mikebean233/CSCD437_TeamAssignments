@@ -59,7 +59,7 @@ int main() {
 	char *passwordRegex_hasLowerCase = "[a-z]+";
 	char *passwordRegex_hasUpperCase = "[A-Z]+";
 	char *passwordRegex_hasDigit     = "[0-9]+";
-	char *passwordRegex_hasPunct     = "[`~!@#$%^&*()_+=;]+";
+	char *passwordRegex_hasPunct     = "[`~!@#$%^&*()_+=;\\.]+";
 
 
 #ifdef TEST
@@ -67,7 +67,7 @@ int main() {
 	char * nameTestCases[]     = {"", "\0", "\n", "Jhon", " Jhon", "1ll124lk1 1 4l ", "bob", "a", "13", "bob ", "0", "..", "Jo hn", 0};
 	char * numberTestCases[]   = {"", "\0", "\n", "0", " 0", "0 ", " 0 ", "-0", "+0", "123", "-123", "+123", "- 123", "123-", "+0123546789", "+01235467891", " ", "apple", "abc", "-12345678901", "--12345678", "-+34567890", "- 34567890", "123456789-","123456789 +", "123456789++", "-123456789-", "(123*456)", "0000000000", "-0000000000", "*1234567890", "1-23456789", "--", "--0", "0000000000000001", 0};
 	char * filenameTestCases[] = {"", "\0", "\n", "file.dog", "file.Txt", "file.txt", "./file/../.txt", "/file.txt", "./file.txt", "../file.txt", "/../file.txt", "./ /", "\\/bin\\/file.txt", "*.txt", "file.*",  0};
-	char * passwordTestCases[] = {"", "\0", "\n", "abcde", "Slg3k4k23j4Dkj4k23j4kn234jh", ";2l23k23l SFLk#lk429' saf\nsf3 ", "abcDEF123@#$abc", "!@12asAS90123456fifty-one-charachers789012345678901","abCD$%789012345fifty-characters2345678901234567890", 0};
+	char * passwordTestCases[] = {"", "\0", "\n", "abcde", "Hello there.8", "Slg3k4k23j4Dkj4k23j4kn234jh", ";2l23k23l SFLk#lk429' saf\nsf3 ", "abcDEF123@#$abc", "!@12asAS90123456fifty-one-charachers789012345678901","abCD$%789012345fifty-characters2345678901234567890", 0};
 
 	runRegexTestCases(nameRegex                         , nameTestCases);
 	runRegexTestCases(numberRegex                       , numberTestCases);
