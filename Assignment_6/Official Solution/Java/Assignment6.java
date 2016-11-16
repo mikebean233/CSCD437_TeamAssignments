@@ -26,8 +26,8 @@ import java.security.SecureRandom;
 
 public class Assignment6 implements Runnable{
 
-    private static String OS = System.getProperty("os.name").toLowerCase();
-    private static String userName = System.getProperty("user.name").toLowerCase();
+    private static String OS                     = System.getProperty("os.name").toLowerCase();
+    private static String userName               = System.getProperty("user.name").toLowerCase();
     private static final int STRING_INPUT_LENGTH = 50;
     private static final int INT_INPUT_LENGTH    = 11;
     private static final int PWD_INPUT_LENGTH    = 56;
@@ -119,12 +119,12 @@ public class Assignment6 implements Runnable{
 
 
         // regexes
-        String nameRegex = "^[a-zA-Z]{1,}$";
-        String numberRegex = "^(()|\\+|\\-)[0-9]{1,10}$";
-        String filenameRegex_InCurrentDir = "^(\\.\\/|[^\\/])[a-zA-Z0-9\\s]+(\\.[a-zA-Z]{1,4})$";
+        String nameRegex                          = "^[a-zA-Z]{1,}$";
+        String numberRegex                        = "^(()|\\+|\\-)[0-9]{1,10}$";
+        String filenameRegex_InCurrentDir         = "^(\\.\\/|[^\\/])[a-zA-Z0-9\\s]+(\\.[a-zA-Z]{1,4})$";
         String filenameRegex_HasAcceptedExtension = "[^\\.]{1,}\\.(text|txt)$"; // White list of valid extensions, we need more ideas ...
-        String filenameRegex_HasRelativePath = "\\.\\.";
-        String passwordRegex = "^(?=(.*[a-z].*))(?=(.*[A-Z].*))(?=.*\\d.*)(?=.*\\W.*)[a-zA-Z0-9\\S]{12,56}$";
+        String filenameRegex_HasRelativePath      = "\\.\\.";
+        String passwordRegex                      = "^(?=(.*[a-z].*))(?=(.*[A-Z].*))(?=.*\\d.*)(?=.*\\W.*)[a-zA-Z0-9\\S]{12,56}$";
 
         if(TEST){
             String nameTestCases[]     = {"", "\0", "\n", "Jhon", " Jhon", "1ll124lk1 1 4l ", "bob", "a", "13", "bob ", "0", "..", "Jo hn"};
@@ -396,6 +396,7 @@ public class Assignment6 implements Runnable{
         try {
             PrintStream printStream = new PrintStream(logFile);
             printStream.println((new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())) + " - " +  error);
+            printStream.close();
         }
         catch(Exception e){
             System.err.println(e.getMessage());
@@ -404,7 +405,7 @@ public class Assignment6 implements Runnable{
     }
 
     private void runRegexTestCases(String regex, String inputs[]){
-        System.out.println("---- Test Cases for Regex: " + regex + "---------");
+        System.out.println("---- Test Cases for Regex: " + regex + " ----");
         System.out.println("  Is Match  |  Input  ");
         System.out.println("----------------------");
 

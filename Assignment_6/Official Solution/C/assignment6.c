@@ -26,15 +26,6 @@
 #include <time.h>
 #include "md5.h"
 
-int isRegexMatch(char *regex, char *input);
-int runRegexTestCases(char *regex, char *testCases[]);
-void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]);
-int readInput(char *inputBuffer, int bufferLength);
-long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]);
-FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[], int fileType);
-void writeOutputFile(char* firstName, char* lastName, long long addResult, long long multResult, FILE* inputFile, FILE* outputFile, FILE* logFile);
-void doPasswordThing(char* prompt, regexVerifier verifiers[]);
-
 int main() {
 	// First things first, make sure this isn't being ran as root
 	if(!getuid()){
@@ -64,15 +55,15 @@ int main() {
 	FILE *inputFile = NULL, *outputFile = NULL, *logFile = NULL;
 
 	// regexes
-	char *nameRegex = "^[a-zA-Z]{1,}$";
-	char *numberRegex = "^(()|\\+|\\-)[0-9]{1,10}$";
-	char *filenameRegex_InCurrentDir = "^(\\.\\/|[^\\/])[a-zA-Z0-9\\s]+(\\.[a-zA-Z]{1,4})$";
+	char *nameRegex                          = "^[a-zA-Z]{1,}$";
+	char *numberRegex                        = "^(()|\\+|\\-)[0-9]{1,10}$";
+	char *filenameRegex_InCurrentDir         = "^(\\.\\/|[^\\/])[a-zA-Z0-9\\s]+(\\.[a-zA-Z]{1,4})$";
 	char *filenameRegex_HasAcceptedExtension = "\\.(text|txt)$"; // White list of valid extensions, we need more ideas ...
-	char *filenameRegex_HasRelativePath = "\\.\\.";
-	char *passwordRegex_hasLowerCase = "[a-z]+";
-	char *passwordRegex_hasUpperCase = "[A-Z]+";
-	char *passwordRegex_hasDigit     = "[0-9]+";
-	char *passwordRegex_hasPunct     = "[`~!@#$%^&*()_+=;\\.]+";
+	char *filenameRegex_HasRelativePath      = "\\.\\.";
+	char *passwordRegex_hasLowerCase         = "[a-z]+";
+	char *passwordRegex_hasUpperCase         = "[A-Z]+";
+	char *passwordRegex_hasDigit             = "[0-9]+";
+	char *passwordRegex_hasPunct             = "[`~!@#$%^&*()_+=;\\.]+";
 
 
 #ifdef TEST
@@ -94,7 +85,7 @@ int main() {
 
 #endif
 
-	regexVerifier emptyVerifier = {NULL, 0, NULL};
+	regexValidator emptyValidator = {NULL, 0, NULL};
 
 	// Try to open a log file for output
 	errno = 0;
@@ -106,44 +97,44 @@ int main() {
 	/**
 	 * 1) get first and last name from user
 	 */
-	regexVerifier nameVerifiers[] = {{nameRegex, 1, "You must enter only letters"}, emptyVerifier};
-	getValidatedString("Enter your first name: ", firstName, IN_BUFF_LENGTH, nameVerifiers);
-	getValidatedString("Enter your last name: " , lastName,  IN_BUFF_LENGTH, nameVerifiers);
+	regexValidator nameValidators[] = {{nameRegex, 1, "You must enter only letters"}, emptyValidator};
+	getValidatedString("Enter your first name: ", firstName, IN_BUFF_LENGTH, nameValidators);
+	getValidatedString("Enter your last name: " , lastName,  IN_BUFF_LENGTH, nameValidators);
 
 	/**
 	 * 2) get 2 32 bit ints from user
 	 */
-	regexVerifier numberVerifiers[] = {{numberRegex, 1, "you may enter up to ten digits which may optionally be precedded by \"+\" or \"-\""}, emptyVerifier};
-	long long integerA = getVerifiedInteger("Enter the first 32 bit integer: " ,intA, NUMBER_BUFF_LENGTH, numberVerifiers);
-	long long integerB = getVerifiedInteger("Enter the second 32 bit integer: ",intB, NUMBER_BUFF_LENGTH, numberVerifiers);
+	regexValidator numberValidators[] = {{numberRegex, 1, "you may enter up to ten digits which may optionally be precedded by \"+\" or \"-\""}, emptyValidator};
+	long long integerA = getVerifiedInteger("Enter the first 32 bit integer: " ,intA, NUMBER_BUFF_LENGTH, numberValidators);
+	long long integerB = getVerifiedInteger("Enter the second 32 bit integer: ",intB, NUMBER_BUFF_LENGTH, numberValidators);
 	long long addResult  = integerA + integerB;
 	long long multResult = integerA * integerB;
 
 	/**
 	 * 3) get input/output filename from user
 	 */
-	regexVerifier filenameVerifiers[] = {
+	regexValidator filenameValidators[] = {
 			{filenameRegex_HasAcceptedExtension, 1, "only files with the extensions .txt and .text are allowed"},
 			{filenameRegex_HasRelativePath,      0, "you are not allowed to use relative paths"},
 			{filenameRegex_InCurrentDir,         1, "you may only specify files in the current directory"},
-			emptyVerifier
+			emptyValidator
 	};
-	inputFile  = getValidFile("Enter an input file path from the current directory" , inFilename , IN_BUFF_LENGTH, filenameVerifiers, INPUT_FILE);
-	outputFile = getValidFile("Enter an output file path from the current directory", outFilename, IN_BUFF_LENGTH, filenameVerifiers, OUTPUT_FILE);
+	inputFile  = getValidFile("Enter an input file path from the current directory" , inFilename , IN_BUFF_LENGTH, filenameValidators, INPUT_FILE);
+	outputFile = getValidFile("Enter an output file path from the current directory", outFilename, IN_BUFF_LENGTH, filenameValidators, OUTPUT_FILE);
 	writeOutputFile(firstName, lastName, addResult, multResult, inputFile, outputFile, logFile);
 
 	/**
 	 * 4) get password from user
 	 */
-	regexVerifier passwordVerifiers[] = {
+	regexValidator passwordValidators[] = {
 			{passwordRegex_hasLowerCase, 1, "You must enter at least one lower case letter."},
 			{passwordRegex_hasUpperCase, 1, "You must enter at least one upper case letter"},
 			{passwordRegex_hasDigit,     1, "You must enter a digit"},
 			{passwordRegex_hasPunct,     1, "You must enter at least on punctuation character"},
-			emptyVerifier
+			emptyValidator
 	};
 
-	doPasswordThing("Enter a password of 12-56 characters, with at least one capital, one lower case, one digit, and one special ( `~!@#$%^&*()_+= ) symbol: ", passwordVerifiers);
+	doPasswordThing("Enter a password of 12-56 characters, with at least one capital, one lower case, one digit, and one special ( `~!@#$%^&*()_+= ) symbol: ", passwordValidators);
 
 	fclose(inputFile);
 	fclose(outputFile);
@@ -206,8 +197,8 @@ int isRegexMatch(char *regex, char *input) {
 	}
 }
 
-void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]) {
-	assert (prompt != NULL && inputBuffer != NULL && inputBufferSize != 0 && verifiers != NULL);
+void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, regexValidator validators[]) {
+	assert (prompt != NULL && inputBuffer != NULL && inputBufferSize != 0 && validators != NULL);
 
 	int isValid = 0;
 
@@ -221,14 +212,14 @@ void getValidatedString(char *prompt, char *inputBuffer, int inputBufferSize, re
 			printf("\nYou must enter something...\n");
 			isValid = 0;
 		} else {
-			int verifierIndex = 0;
+			int validatorIndex = 0;
 			int failCount = 0;
-			regexVerifier thisVerifier;
-			while ((thisVerifier = verifiers[verifierIndex++]).regex != NULL) {
-				if (thisVerifier.shouldMatch != isRegexMatch(thisVerifier.regex, inputBuffer)) {
+			regexValidator thisValidator;
+			while ((thisValidator = validators[validatorIndex++]).regex != NULL) {
+				if (thisValidator.shouldMatch != isRegexMatch(thisValidator.regex, inputBuffer)) {
 					failCount++;
 					isValid = 0;
-					printf("\n- %s\n", thisVerifier.failDescription);
+					printf("\n- %s\n", thisValidator.failDescription);
 				}
 			}
 			if (failCount == 0)
@@ -251,11 +242,11 @@ int readInput(char *inputBuffer, int bufferLength) {
 	return (exceededBuffer) ? READ_EXCEEDED_BUFFER : (copyCount == 0) ? READ_ZERO_BYTES : READ_WITHIN_BUFFER;
 }
 
-long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[]){
+long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSize, regexValidator validators[]){
 	int isValid = 0;
 	long long returnValue = 0;
 	while(!isValid){
-		getValidatedString(prompt, inputBuffer, inputBufferSize, verifiers);
+		getValidatedString(prompt, inputBuffer, inputBufferSize, validators);
 		errno = 0;
 		returnValue = strtoll(inputBuffer, NULL, 10);
 		isValid = 1;
@@ -277,14 +268,14 @@ long long getVerifiedInteger(char *prompt, char *inputBuffer, int inputBufferSiz
  return returnValue;
 }
 
-FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexVerifier verifiers[], int fileType){
+FILE* getValidFile(char *prompt, char *inputBuffer, int inputBufferSize, regexValidator validators[], int fileType){
 	assert(fileType == INPUT_FILE || fileType == OUTPUT_FILE);
 
 	FILE* validFile = NULL;
 
 	int isValid = 0;
 	while(!isValid){
-		getValidatedString(prompt, inputBuffer, inputBufferSize, verifiers);
+		getValidatedString(prompt, inputBuffer, inputBufferSize, validators);
 
 		errno = 0;
 		struct stat thisStat;
@@ -398,7 +389,7 @@ void writeOutputFile(char* firstName, char* lastName, long long addResult, long 
 
 }
 
-void doPasswordThing(char* prompt, regexVerifier verifiers[]){
+void doPasswordThing(char* prompt, regexValidator validators[]){
 	char password[64];
 	char passwordGuess[sizeof(password)];
 	unsigned int originalHash[4];
@@ -412,7 +403,7 @@ void doPasswordThing(char* prompt, regexVerifier verifiers[]){
 		salt[i] = (char)((rand() % (UCHAR_MAX - 1)) +1);
 
 	// get the password from the user
-	getValidatedString(prompt,password, sizeof(password) - 8, verifiers);
+	getValidatedString(prompt,password, sizeof(password) - 8, validators);
 	int passwordLength = strlen((char*)password);
 
 	// Append the salt to the end of the string and fill the rest with '\0's
@@ -434,7 +425,7 @@ void doPasswordThing(char* prompt, regexVerifier verifiers[]){
 		foundPassword = 1;
 
 		// Get the password guess from the user
-		getValidatedString("Enter your password guess", passwordGuess, sizeof(passwordGuess), verifiers);
+		getValidatedString("Enter your password guess", passwordGuess, sizeof(passwordGuess), validators);
 		int passwordGuestLength = strlen((char*)passwordGuess);
 
 		// Append the salt to the end of the string and fill the rest with '\0's
