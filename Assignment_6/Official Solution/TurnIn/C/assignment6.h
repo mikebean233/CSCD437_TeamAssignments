@@ -14,6 +14,8 @@
 #ifndef _ASSIGNMENT6_H
 #define _ASSIGNMENT6_H
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 
 #define IN_BUFF_LENGTH       51
